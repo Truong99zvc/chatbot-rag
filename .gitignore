@@ -72,6 +72,7 @@ coverage.xml
 data/
 models/
 embeddings/
+vectorstores/faiss/current_index/
 *.faiss
 *.pkl
 *.pickle

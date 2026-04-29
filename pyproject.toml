@@ -1,7 +1,7 @@
 [project]
 name = "chatbot-pdf-rag"
 version = "0.1.0"
-description = ""
+description = "Streamlit PDF RAG chatbot with local FAISS vector database"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -12,7 +12,6 @@ dependencies = [
     "langchain-core>=0.3.45",
     "langchain-google-genai>=2.1.0",
     "langchain-text-splitters>=0.3.6",
-    "pandas>=2.2.3",
     "PyPDF2>=3.0.1",
     "python-dotenv>=1.0.1",
     "streamlit>=1.43.2",
