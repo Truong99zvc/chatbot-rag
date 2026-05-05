@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 import os
 import shutil
 from datetime import datetime
@@ -19,10 +20,45 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 APP_TITLE = "Chatbot PDF RAG"
 VECTOR_DB_DIR = Path("vectorstores") / "faiss"
 FAISS_INDEX_DIR = VECTOR_DB_DIR / "current_index"
+MEMORY_FILE = VECTOR_DB_DIR / "conversation_memory.json"
 
 
 def ensure_directories() -> None:
     VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_conversation_memory() -> list[dict]:
+    if not MEMORY_FILE.exists():
+        return []
+
+    try:
+        data = json.loads(MEMORY_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+    if not isinstance(data, list):
+        return []
+
+    cleaned_history = []
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        cleaned_history.append(
+            {
+                "timestamp": str(item.get("timestamp", "")),
+                "question": str(item.get("question", "")),
+                "answer": str(item.get("answer", "")),
+                "pdf_names": str(item.get("pdf_names", "")),
+            }
+        )
+    return cleaned_history
+
+
+def persist_conversation_memory(history: list[dict]) -> None:
+    MEMORY_FILE.write_text(
+        json.dumps(history, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
 
 def get_pdf_text(pdf_docs) -> tuple[str, list[str]]:
@@ -74,21 +110,38 @@ def format_llm_content(content) -> str:
     return str(content)
 
 
-def answer_question(question: str, vector_store: FAISS, api_key: str) -> str:
+def build_memory_context(history: list[dict], max_turns: int = 6) -> str:
+    if not history:
+        return "Khong co lich su hoi thoai truoc do."
+
+    recent_turns = history[-max_turns:]
+    lines = []
+    for idx, turn in enumerate(recent_turns, start=1):
+        lines.append(f"Turn {idx} | User: {turn.get('question', '')}")
+        lines.append(f"Turn {idx} | Assistant: {turn.get('answer', '')}")
+    return "\n".join(lines)
+
+
+def answer_question(question: str, vector_store: FAISS, api_key: str, history: list[dict]) -> str:
     docs = vector_store.similarity_search(question, k=4)
     if not docs:
         return "Khong tim thay ngu canh phu hop trong tai lieu da nap."
 
     context = "\n\n".join(doc.page_content for doc in docs)
+    memory_context = build_memory_context(history)
     prompt = ChatPromptTemplate.from_template(
         """
 Ban la tro ly RAG cho tai lieu PDF.
-Hay tra loi dua tren context ben duoi.
+Hay tra loi dua tren context ben duoi va xem lich su hoi thoai de giu mach hoi dap.
 
 Yeu cau:
 1) Tra loi ro rang, dung trong pham vi context.
-2) Neu context khong du thong tin, noi ro ban khong tim thay trong tai lieu.
-3) Tra loi bang tieng Viet, ngan gon va co cau truc.
+2) Neu context khong du thong tin, co the dung lich su hoi thoai de hieu ro cau hoi tiep noi.
+3) Neu van khong du thong tin, noi ro ban khong tim thay trong tai lieu.
+4) Tra loi bang tieng Viet, ngan gon va co cau truc.
+
+Conversation memory:
+{memory_context}
 
 Context:
 {context}
@@ -103,7 +156,13 @@ Question:
         temperature=0.2,
         google_api_key=api_key,
     )
-    response = llm.invoke(prompt.format_messages(context=context, question=question))
+    response = llm.invoke(
+        prompt.format_messages(
+            context=context,
+            question=question,
+            memory_context=memory_context,
+        )
+    )
     return format_llm_content(response.content).strip()
 
 
@@ -119,8 +178,9 @@ def build_csv(history: list[dict]) -> str:
 
 
 def init_state() -> None:
+    memory_history = load_conversation_memory()
     defaults = {
-        "conversation_history": [],
+        "conversation_history": memory_history,
         "vector_store": None,
         "processed_pdf_names": [],
         "index_ready": False,
@@ -167,6 +227,7 @@ def main() -> None:
 
         if clear_chat:
             st.session_state.conversation_history = []
+            persist_conversation_memory(st.session_state.conversation_history)
             st.success("Da xoa lich su hoi dap.")
 
         if reset_knowledge:
@@ -222,7 +283,12 @@ def main() -> None:
                     st.write(question)
                 with st.chat_message("assistant"):
                     with st.spinner("Dang truy van vector database..."):
-                        answer = answer_question(question, st.session_state.vector_store, api_key)
+                        answer = answer_question(
+                            question,
+                            st.session_state.vector_store,
+                            api_key,
+                            st.session_state.conversation_history,
+                        )
                     st.write(answer)
 
                 st.session_state.conversation_history.append(
@@ -233,6 +299,7 @@ def main() -> None:
                         "pdf_names": ", ".join(st.session_state.processed_pdf_names),
                     }
                 )
+                persist_conversation_memory(st.session_state.conversation_history)
 
     with col2:
         st.subheader("Trang thai")

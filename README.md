@@ -1,29 +1,31 @@
 # Chatbot PDF RAG
 
-Chatbot RAG su dung Streamlit + LangChain + Google Gemini + FAISS local.
+A Streamlit-based PDF RAG chatbot built with LangChain, Google Gemini, and a local FAISS vector store.
 
-Project nay cho phep:
+## Features
 
-- Upload nhieu file PDF
-- Tach text thanh chunks va tao embeddings
-- Luu vector database local bang FAISS trong thu muc `vectorstores/faiss`
-- Hoi dap theo noi dung tai lieu
-- Download lich su hoi dap ra CSV
+- Upload one or multiple PDF files
+- Extract text and split into retrieval chunks
+- Build and persist a local FAISS index
+- Ask questions grounded in uploaded documents
+- Persist conversation memory to disk
+- Reuse recent conversation context in follow-up questions
+- Export conversation history as CSV
 
-## 1. Yeu cau
+## Requirements
 
 - Python 3.10+
 - Google AI API key (Gemini)
 
-## 2. Cai dat
+## Installation
 
-### Cach 1: dung uv
+### Option 1: uv
 
 ```bash
 uv sync
 ```
 
-### Cach 2: dung pip + venv
+### Option 2: pip + venv
 
 ```bash
 python -m venv .venv
@@ -31,37 +33,44 @@ python -m venv .venv
 pip install -e .
 ```
 
-## 3. Cau hinh API key
+## API Key Setup
 
-Tao file `.env` trong root project:
+Create a `.env` file in the project root:
 
 ```env
 GOOGLE_API_KEY=your_api_key_here
 ```
 
-Ban cung co the nhap key truc tiep trong sidebar cua app.
+You can also enter the API key directly in the Streamlit sidebar.
 
-## 4. Chay ung dung
+## Run the App
 
 ```bash
 streamlit run app.py
 ```
 
-Mo URL Streamlit hien thi trong terminal, thuong la:
+Then open the local URL shown in the terminal (usually `http://localhost:8501`).
 
-```text
-http://localhost:8501
-```
+## How to Use
 
-## 5. Quy trinh su dung
+1. Enter your Google API key.
+2. Upload one or more PDF files.
+3. Click **Submit and Process** to build the FAISS index.
+4. Ask questions in the chat box.
+5. Optionally download conversation history as CSV.
 
-1. Nhap Google API key
-2. Upload 1 hoac nhieu file PDF
-3. Bam **Submit and Process** de tao index FAISS
-4. Dat cau hoi trong chat box
-5. Download lich su hoi dap (CSV) neu can
+## Conversation Memory
 
-## 6. Cau truc project
+The app now includes persistent conversation memory:
+
+- Chat history is stored in `vectorstores/faiss/conversation_memory.json`.
+- Memory is loaded automatically when the app starts.
+- The latest conversation turns are added to the LLM prompt to support follow-up questions.
+- Clicking **Clear Chat** clears both UI history and persisted memory.
+
+This memory is conversation-level context. It does not replace document retrieval from FAISS.
+
+## Project Structure
 
 ```text
 chatbot-pdf-rag/
@@ -70,26 +79,19 @@ chatbot-pdf-rag/
 ├─ README.md
 └─ vectorstores/
    └─ faiss/
-      └─ current_index/    # tao sau khi bam Submit and Process
+      ├─ current_index/            # created after processing PDFs
+      └─ conversation_memory.json  # created after first chat message
 ```
 
-## 7. Diem da hoan thien
+## Notes
 
-- Fix import LangChain theo API hien tai
-- Tach ro 2 buoc Process PDF va Chat truy van
-- Luu FAISS local vao thu muc rieng trong project
-- Quan ly session state on dinh (chat history, index status)
-- Xu ly loi co ban khi PDF khong co text hoac key bi thieu
+- Scanned/image-only PDFs may not extract text correctly with PyPDF2.
+- The current implementation supports Google AI (Gemini).
+- Local FAISS is good for prototypes and small projects.
 
-## 8. Luu y
+## Suggested Next Improvements
 
-- PDF scan anh co the khong trich xuat duoc text voi PyPDF2.
-- App hien dang su dung 1 model: Google AI (Gemini).
-- FAISS index local phu hop POC va du an nho. Neu muon scale production cloud, co the nang cap sang Pinecone/Qdrant.
-
-## 9. Huong nang cap tiep
-
-- Them OCR cho scanned PDF (pytesseract, unstructured)
-- Them metadata retrieval (page number, source file)
-- Them citation tung doan context trong cau tra loi
-- Them test tu dong cho text extraction va retrieval flow
+- Add OCR support for scanned PDFs
+- Add source metadata (file name, page number) to answers
+- Add answer citations for retrieved passages
+- Add automated tests for extraction and retrieval flow
