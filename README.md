@@ -1,97 +1,111 @@
 # Chatbot PDF RAG
 
-A Streamlit-based PDF RAG chatbot built with LangChain, Google Gemini, and a local FAISS vector store.
+A production-ready PDF Question-Answering API built with **FastAPI**, **LangChain**, **Google Gemini**, and **FAISS**.
 
-## Features
+## Architecture
 
-- Upload one or multiple PDF files
-- Extract text and split into retrieval chunks
-- Build and persist a local FAISS index
-- Ask questions grounded in uploaded documents
-- Persist conversation memory to disk
-- Reuse recent conversation context in follow-up questions
-- Export conversation history as CSV
+```
+rag-project/
+├── app/
+│   ├── main.py                # FastAPI entry point
+│   ├── api/                   # Route handlers (rag, documents, health)
+│   ├── middleware/            # Error handler, request logger, rate limiter
+│   ├── rag/                   # Pipeline, retriever, generator, prompt builder
+│   ├── ingestion/             # Loader, parser (PDF/TXT), chunker
+│   ├── embeddings/            # Google text-embedding-004
+│   ├── vectorstore/           # FAISS operations (add, load, merge, reset)
+│   ├── db/                    # PostgreSQL models & async session
+│   ├── config/                # Pydantic settings (env-driven)
+│   └── utils/                 # Helper functions
+├── tests/
+├── docker/
+├── .github/workflows/
+├── requirements.txt
+├── Makefile
+└── .env.example
+```
 
-## Requirements
+## Quick Start
 
-- Python 3.10+
-- Google AI API key (Gemini)
+### 1. Setup environment
+```bash
+cp .env.example .env
+# Fill in GOOGLE_API_KEY in .env
+```
 
-## Installation
+### 2. Install dependencies
+```bash
+make install
+```
 
-### Option 1: uv
+### 3. Run locally (with auto-reload)
+```bash
+make dev
+```
+API docs: http://localhost:8000/docs
+
+### 4. Run with Docker
+```bash
+make docker-up
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Service health check |
+| POST | `/api/v1/documents/upload` | Upload & index PDF/TXT files |
+| GET | `/api/v1/documents/list` | List uploaded documents |
+| DELETE | `/api/v1/documents/reset` | Reset knowledge base |
+| POST | `/api/v1/rag/query` | Ask a question |
+
+### Example — Upload a PDF
+```bash
+curl -X POST http://localhost:8000/api/v1/documents/upload \
+  -F "files=@my_document.pdf"
+```
+
+### Example — Ask a question
+```bash
+curl -X POST http://localhost:8000/api/v1/rag/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Tóm tắt nội dung chính của tài liệu", "session_id": "user-123"}'
+```
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Framework | FastAPI + Uvicorn |
+| LLM | Google Gemini 2.0 Flash |
+| Embeddings | Google text-embedding-004 |
+| Vector Store | FAISS (local) |
+| PDF Parsing | pypdf |
+| ORM | SQLAlchemy 2.0 (async) |
+| Database | PostgreSQL 16 |
+| Container | Docker + Docker Compose |
+
+## Configuration
+
+All settings via environment variables (see `.env.example`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GOOGLE_API_KEY` | *(required)* | Google AI Studio API key |
+| `LLM_MODEL` | `gemini-2.0-flash` | Gemini model name |
+| `EMBEDDING_MODEL` | `models/text-embedding-004` | Embedding model |
+| `CHUNK_SIZE` | `1200` | Characters per chunk |
+| `CHUNK_OVERLAP` | `200` | Overlap between chunks |
+| `TOP_K_RESULTS` | `4` | Chunks retrieved per query |
+| `DATABASE_URL` | `postgresql+asyncpg://...` | Async PostgreSQL URL |
+| `RATE_LIMIT_REQUESTS` | `60` | Max requests per window |
+| `RATE_LIMIT_WINDOW` | `60` | Rate limit window (seconds) |
+
+## Development
 
 ```bash
-uv sync
+make test    # run pytest
+make lint    # lint with ruff
+make format  # auto-format with ruff
+make clean   # remove __pycache__ and build artifacts
 ```
-
-### Option 2: pip + venv
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -e .
-```
-
-## API Key Setup
-
-Create a `.env` file in the project root:
-
-```env
-GOOGLE_API_KEY=your_api_key_here
-```
-
-You can also enter the API key directly in the Streamlit sidebar.
-
-## Run the App
-
-```bash
-streamlit run app.py
-```
-
-Then open the local URL shown in the terminal (usually `http://localhost:8501`).
-
-## How to Use
-
-1. Enter your Google API key.
-2. Upload one or more PDF files.
-3. Click **Submit and Process** to build the FAISS index.
-4. Ask questions in the chat box.
-5. Optionally download conversation history as CSV.
-
-## Conversation Memory
-
-The app now includes persistent conversation memory:
-
-- Chat history is stored in `vectorstores/faiss/conversation_memory.json`.
-- Memory is loaded automatically when the app starts.
-- The latest conversation turns are added to the LLM prompt to support follow-up questions.
-- Clicking **Clear Chat** clears both UI history and persisted memory.
-
-This memory is conversation-level context. It does not replace document retrieval from FAISS.
-
-## Project Structure
-
-```text
-chatbot-pdf-rag/
-├─ app.py
-├─ pyproject.toml
-├─ README.md
-└─ vectorstores/
-   └─ faiss/
-      ├─ current_index/            # created after processing PDFs
-      └─ conversation_memory.json  # created after first chat message
-```
-
-## Notes
-
-- Scanned/image-only PDFs may not extract text correctly with PyPDF2.
-- The current implementation supports Google AI (Gemini).
-- Local FAISS is good for prototypes and small projects.
-
-## Suggested Next Improvements
-
-- Add OCR support for scanned PDFs
-- Add source metadata (file name, page number) to answers
-- Add answer citations for retrieved passages
-- Add automated tests for extraction and retrieval flow
