@@ -1,8 +1,8 @@
-# UIT Training Regulations Chatbot
+# UIT Academic Policies Chatbot
 
-A RAG-powered chatbot for answering questions about the **official training regulations, policies, and procedures** of the University of Information Technology – VNU-HCM (UIT).
+A RAG-powered chatbot for answering questions about the **official regulations, policies, and procedures for UIT's formal undergraduate programs** — University of Information Technology, VNU-HCM.
 
-Students can ask any question related to UIT's undergraduate training regulations and receive answers with citations to specific articles and clauses.
+Students can ask any question about academic rules and procedures and receive answers with citations to specific articles and clauses.
 
 ## Tech Stack
 

@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # App
-    APP_NAME: str = "UIT Quy Chế Đào Tạo Chatbot"
+    APP_NAME: str = "UIT Academic Policies Chatbot"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
