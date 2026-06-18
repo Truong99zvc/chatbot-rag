@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # App
-    APP_NAME: str = "Chatbot PDF RAG"
+    APP_NAME: str = "UIT Quy Chế Đào Tạo Chatbot"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
@@ -19,20 +19,19 @@ class Settings(BaseSettings):
     # Vector Store
     FAISS_INDEX_DIR: Path = Path("vectorstores/faiss/current_index")
 
+    # Data
+    DATA_DIR: Path = Path("data")
+
+    # Session history (JSON file on disk, per session_id)
+    SESSION_STORE_FILE: Path = Path("vectorstores/sessions.json")
+
     # Chunking
-    CHUNK_SIZE: int = 1200
-    CHUNK_OVERLAP: int = 200
+    CHUNK_SIZE: int = 1000
+    CHUNK_OVERLAP: int = 150
 
     # RAG
-    TOP_K_RESULTS: int = 4
+    TOP_K_RESULTS: int = 5
     MAX_HISTORY_TURNS: int = 6
-
-    # PostgreSQL
-    DATABASE_URL: str = "postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb"
-
-    # Rate Limiting
-    RATE_LIMIT_REQUESTS: int = 60
-    RATE_LIMIT_WINDOW: int = 60  # seconds
 
 
 settings = Settings()

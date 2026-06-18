@@ -1,4 +1,4 @@
-.PHONY: run dev install test lint format docker-up docker-down clean
+.PHONY: run dev install build-index test lint format clean
 
 run:
 	uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -7,22 +7,22 @@ dev:
 	uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 install:
-	pip install -r requirements.txt
+	uv sync
+
+build-index:
+	python scripts/build_index.py
+
+build-index-reset:
+	python scripts/build_index.py --reset
 
 test:
 	pytest tests/ -v --tb=short
 
 lint:
-	ruff check app/ tests/
+	ruff check app/ tests/ scripts/
 
 format:
-	ruff format app/ tests/
-
-docker-up:
-	docker compose -f docker/docker-compose.yml up -d --build
-
-docker-down:
-	docker compose -f docker/docker-compose.yml down
+	ruff format app/ tests/ scripts/
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
