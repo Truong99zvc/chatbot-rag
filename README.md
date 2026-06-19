@@ -10,8 +10,8 @@ Students can ask any question about academic rules and procedures and receive an
 |---|---|
 | Framework | FastAPI + Uvicorn |
 | Web UI | HTML / CSS / JavaScript (served by FastAPI) |
-| LLM | Mistral-7B-Instruct-v0.3 (via HuggingFace Inference API) |
-| Embeddings | multilingual-e5-large (local, sentence-transformers) |
+| LLM | Qwen2.5-7B-Instruct (via HuggingFace Inference API) |
+| Embeddings | multilingual-e5-large (via HuggingFace Inference API) |
 | Vector Store | FAISS (local) |
 | PDF Parsing | Docling (with built-in OCR for scanned pages) |
 | Session Storage | JSON file (disk-backed) |
@@ -155,8 +155,8 @@ All settings are controlled via environment variables (see `.env.example`):
 | Variable | Default | Description |
 |---|---|---|
 | `HF_TOKEN` | *(required)* | HuggingFace API token |
-| `LLM_MODEL` | `mistralai/Mistral-7B-Instruct-v0.3` | HF Inference API model |
-| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-large` | Local embedding model (multilingual) |
+| `LLM_MODEL` | `Qwen/Qwen2.5-7B-Instruct` | HF Inference API model |
+| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-large` | HF Inference API embedding model |
 | `FAISS_INDEX_DIR` | `vectorstores/faiss/current_index` | FAISS index path |
 | `CHUNK_SIZE` | `1000` | Characters per chunk |
 | `CHUNK_OVERLAP` | `150` | Overlap between consecutive chunks |

@@ -1,18 +1,41 @@
 [project]
-name = "chatbot-pdf-rag"
-version = "0.1.0"
-description = "Streamlit PDF RAG chatbot with local FAISS vector database"
+name = "uit-academic-policies-chatbot"
+version = "1.0.0"
+description = "RAG chatbot for UIT academic regulations using FastAPI, FAISS, and HuggingFace LLMs"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "faiss-cpu>=1.10.0",
-    "google-ai-generativelanguage>=0.6.17",
+    # Core Web Framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",
+    "pydantic-settings>=2.3.0",
+    "python-dotenv>=1.0.1",
+    
+    # RAG Orchestration
     "langchain>=0.3.45",
     "langchain-community>=0.3.45",
     "langchain-core>=0.3.45",
-    "langchain-google-genai>=2.1.0",
+    "langchain-huggingface>=0.1.0",
     "langchain-text-splitters>=0.3.6",
-    "PyPDF2>=3.0.1",
-    "python-dotenv>=1.0.1",
-    "streamlit>=1.43.2",
+    
+    # HuggingFace & ML
+    "huggingface-hub>=0.24.0",
+    "sentence-transformers>=3.0.0",
+    "transformers>=4.40.0",
+    
+    # Vector DB
+    "faiss-cpu>=1.10.0",
+    
+    # Document Parsing (PDF, OCR)
+    "docling>=2.0.0",
+    
+    # Evaluation (RAGAS)
+    "ragas>=0.2.0",
+    "datasets>=2.21.0",
+    "pandas>=2.0.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

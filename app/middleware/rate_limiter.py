@@ -19,7 +19,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
         now = time.time()
         window = settings.RATE_LIMIT_WINDOW
-        limit = settings.RATE_LIMIT_REQUESTS
+        limit = settings.RATE_LIMIT_MAX_REQUESTS
 
         # Remove timestamps outside the current window
         self._timestamps[client_ip] = [

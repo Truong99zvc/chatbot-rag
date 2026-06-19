@@ -1,25 +1,15 @@
 from functools import lru_cache
-
-from langchain_huggingface import HuggingFaceEmbeddings
-
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from app.config.settings import settings
 
-
 @lru_cache(maxsize=1)
-def get_embeddings() -> HuggingFaceEmbeddings:
+def get_embeddings() -> HuggingFaceEndpointEmbeddings:
     """
-    Return a cached HuggingFaceEmbeddings instance.
-
-    Model: intfloat/multilingual-e5-large
-    - Runs fully locally (downloaded once to ~/.cache/huggingface)
-    - Excellent multilingual support including Vietnamese
-    - No API token required after the initial download
-
-    The lru_cache ensures the model is loaded into memory only once
-    and reused across all requests.
+    Returns the HuggingFace Embeddings model via Inference API.
+    This avoids local PyTorch Windows crash issues (exit code 1).
     """
-    return HuggingFaceEmbeddings(
-        model_name=settings.EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True},
+    return HuggingFaceEndpointEmbeddings(
+        model=settings.EMBEDDING_MODEL,
+        task="feature-extraction",
+        huggingfacehub_api_token=settings.HF_TOKEN,
     )

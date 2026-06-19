@@ -3,7 +3,7 @@ from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_core.embeddings import Embeddings
 
 from app.config.settings import settings
 
@@ -11,7 +11,7 @@ from app.config.settings import settings
 class VectorDB:
     """FAISS-backed vector store with load / save / merge / reset helpers."""
 
-    def __init__(self, embeddings: GoogleGenerativeAIEmbeddings) -> None:
+    def __init__(self, embeddings: Embeddings) -> None:
         self._embeddings = embeddings
         self._index_dir = Path(settings.FAISS_INDEX_DIR)
 

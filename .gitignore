@@ -71,6 +71,7 @@ data/
 models/
 embeddings/
 vectorstores/faiss/current_index/
+vectorstores/sessions.json
 *.faiss
 *.pkl
 *.pickle

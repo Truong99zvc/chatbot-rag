@@ -1,5 +1,9 @@
+import os
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Fix for Windows OpenMP crash with PyTorch/HuggingFace
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 class Settings(BaseSettings):
@@ -13,7 +17,7 @@ class Settings(BaseSettings):
     # HuggingFace
     HF_TOKEN: str = ""
     EMBEDDING_MODEL: str = "intfloat/multilingual-e5-large"
-    LLM_MODEL: str = "mistralai/Mistral-7B-Instruct-v0.3"
+    LLM_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"
     LLM_TEMPERATURE: float = 0.2
 
     # Vector Store
@@ -32,6 +36,10 @@ class Settings(BaseSettings):
     # RAG
     TOP_K_RESULTS: int = 5
     MAX_HISTORY_TURNS: int = 6
+
+    # Rate Limiting
+    RATE_LIMIT_WINDOW: int = 60
+    RATE_LIMIT_MAX_REQUESTS: int = 20
 
 
 settings = Settings()
