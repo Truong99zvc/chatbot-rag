@@ -10,10 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . .
+RUN pip install uv && uv sync --frozen
+
+# Create necessary directories
 
 RUN mkdir -p app/logs vectorstores/faiss uploads
 
