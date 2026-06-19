@@ -9,6 +9,7 @@ Students can ask any question about academic rules and procedures and receive an
 | Component | Technology |
 |---|---|
 | Framework | FastAPI + Uvicorn |
+| Web UI | HTML / CSS / JavaScript (served by FastAPI) |
 | LLM | Google Gemini 2.0 Flash |
 | Embeddings | Google text-embedding-004 |
 | Vector Store | FAISS (local) |
@@ -20,7 +21,7 @@ Students can ask any question about academic rules and procedures and receive an
 ```
 chatbot-rag/
 ├── app/
-│   ├── main.py                  # FastAPI entry point
+│   ├── main.py                  # FastAPI entry point + static file mount
 │   ├── api/
 │   │   ├── rag.py               # Endpoints: /query, /search, /sessions
 │   │   └── health.py            # Health check + index status
@@ -37,12 +38,18 @@ chatbot-rag/
 │   ├── embeddings/              # Google embedding wrapper
 │   ├── vectorstore/             # FAISS load / save / merge / reset
 │   └── middleware/              # Logger, rate limiter, error handler
+├── static/
+│   ├── index.html               # Chat web interface (dark-mode)
+│   ├── style.css                # Premium dark UI styles
+│   └── app.js                   # Chat logic (fetch, markdown, session)
 ├── data/
 │   └── *.pdf                    # UIT regulation PDF files
 ├── scripts/
 │   └── build_index.py           # One-time script to build the FAISS index
 ├── vectorstores/faiss/          # FAISS index (generated after running build-index)
-└── tests/
+├── tests/
+│   └── evaluation/              # RAGAS evaluation pipeline
+└── ...
 ```
 
 ## Quick Start
@@ -78,7 +85,25 @@ This will:
 ```bash
 make dev
 ```
-API docs: http://localhost:8000/docs
+
+Open **http://localhost:8000** in your browser — the chat interface loads automatically.
+
+API docs (Swagger): http://localhost:8000/docs
+
+---
+
+## Web Interface
+
+The chat UI is served directly by FastAPI at `http://localhost:8000`.
+
+| Feature | Description |
+|---|---|
+| **Chat** | Free-form Q&A with Markdown rendering and source citations |
+| **Article lookup** | Sidebar search field — enter a number to retrieve that Điều's content |
+| **Suggested questions** | Quick-start chips for the most common student queries |
+| **Session memory** | Conversation history persisted per browser session |
+| **Index status** | Header indicator shows green when FAISS index is ready |
+| **New chat** | Reset conversation with one click |
 
 ---
 
