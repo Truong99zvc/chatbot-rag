@@ -10,10 +10,10 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
-    # Google AI
-    GOOGLE_API_KEY: str = ""
-    EMBEDDING_MODEL: str = "models/text-embedding-004"
-    LLM_MODEL: str = "gemini-2.0-flash"
+    # HuggingFace
+    HF_TOKEN: str = ""
+    EMBEDDING_MODEL: str = "intfloat/multilingual-e5-large"
+    LLM_MODEL: str = "mistralai/Mistral-7B-Instruct-v0.3"
     LLM_TEMPERATURE: float = 0.2
 
     # Vector Store

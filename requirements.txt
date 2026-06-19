@@ -9,14 +9,16 @@ python-dotenv>=1.0.1
 langchain>=0.3.45
 langchain-community>=0.3.45
 langchain-core>=0.3.45
-langchain-google-genai>=2.1.0
+langchain-huggingface>=0.1.0
 langchain-text-splitters>=0.3.6
 
 # Vector Store
 faiss-cpu>=1.10.0
 
-# Google AI
-google-ai-generativelanguage>=0.6.17
+# HuggingFace — LLM (Inference API) + Embeddings (local)
+huggingface-hub>=0.24.0
+sentence-transformers>=3.0.0
+transformers>=4.40.0
 
 # Document Parsing (Docling — handles PDF text + OCR for scanned pages)
 docling>=2.0.0

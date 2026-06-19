@@ -10,8 +10,8 @@ Students can ask any question about academic rules and procedures and receive an
 |---|---|
 | Framework | FastAPI + Uvicorn |
 | Web UI | HTML / CSS / JavaScript (served by FastAPI) |
-| LLM | Google Gemini 2.0 Flash |
-| Embeddings | Google text-embedding-004 |
+| LLM | Mistral-7B-Instruct-v0.3 (via HuggingFace Inference API) |
+| Embeddings | multilingual-e5-large (local, sentence-transformers) |
 | Vector Store | FAISS (local) |
 | PDF Parsing | Docling (with built-in OCR for scanned pages) |
 | Session Storage | JSON file (disk-backed) |
@@ -66,9 +66,9 @@ make install
 ### 2. Configure your API key
 ```bash
 cp .env.example .env
-# Open .env and fill in your GOOGLE_API_KEY
+# Open .env and fill in your HF_TOKEN
 ```
-Get your API key at: https://ai.google.dev/
+Get your free HuggingFace token at: https://huggingface.co/settings/tokens
 
 ### 3. Build the FAISS index from the PDF
 ```bash
@@ -154,9 +154,9 @@ All settings are controlled via environment variables (see `.env.example`):
 
 | Variable | Default | Description |
 |---|---|---|
-| `GOOGLE_API_KEY` | *(required)* | Google AI Studio API key |
-| `LLM_MODEL` | `gemini-2.0-flash` | Gemini model name |
-| `EMBEDDING_MODEL` | `models/text-embedding-004` | Embedding model |
+| `HF_TOKEN` | *(required)* | HuggingFace API token |
+| `LLM_MODEL` | `mistralai/Mistral-7B-Instruct-v0.3` | HF Inference API model |
+| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-large` | Local embedding model (multilingual) |
 | `FAISS_INDEX_DIR` | `vectorstores/faiss/current_index` | FAISS index path |
 | `CHUNK_SIZE` | `1000` | Characters per chunk |
 | `CHUNK_OVERLAP` | `150` | Overlap between consecutive chunks |

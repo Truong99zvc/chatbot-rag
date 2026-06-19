@@ -1,18 +1,25 @@
 from functools import lru_cache
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from app.config.settings import settings
 
 
 @lru_cache(maxsize=1)
-def get_embeddings() -> GoogleGenerativeAIEmbeddings:
+def get_embeddings() -> HuggingFaceEmbeddings:
     """
-    Return a cached GoogleGenerativeAIEmbeddings instance.
-    The cache ensures the object (and any underlying connection) is reused
-    across requests rather than recreated on every call.
+    Return a cached HuggingFaceEmbeddings instance.
+
+    Model: intfloat/multilingual-e5-large
+    - Runs fully locally (downloaded once to ~/.cache/huggingface)
+    - Excellent multilingual support including Vietnamese
+    - No API token required after the initial download
+
+    The lru_cache ensures the model is loaded into memory only once
+    and reused across all requests.
     """
-    return GoogleGenerativeAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        google_api_key=settings.GOOGLE_API_KEY,
+    return HuggingFaceEmbeddings(
+        model_name=settings.EMBEDDING_MODEL,
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True},
     )

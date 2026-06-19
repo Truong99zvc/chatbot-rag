@@ -90,21 +90,26 @@ def _import_ragas():
 
 
 def build_evaluator_llm_and_embeddings():
-    """Set up Gemini as RAGAS evaluator (reuses the app's API key)."""
-    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+    """Set up HuggingFace as RAGAS evaluator (reuses the app's HF token)."""
+    from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint, HuggingFaceEmbeddings
 
-    if not settings.GOOGLE_API_KEY:
-        logger.error("GOOGLE_API_KEY is not set in .env")
+    if not settings.HF_TOKEN:
+        logger.error("HF_TOKEN is not set in .env")
         sys.exit(1)
 
-    llm = ChatGoogleGenerativeAI(
-        model=settings.LLM_MODEL,
+    endpoint = HuggingFaceEndpoint(
+        repo_id=settings.LLM_MODEL,
+        huggingfacehub_api_token=settings.HF_TOKEN,
         temperature=0.0,  # deterministic for evaluation
-        google_api_key=settings.GOOGLE_API_KEY,
+        max_new_tokens=1024,
+        task="text-generation",
     )
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        google_api_key=settings.GOOGLE_API_KEY,
+    llm = ChatHuggingFace(llm=endpoint)
+
+    embeddings = HuggingFaceEmbeddings(
+        model_name=settings.EMBEDDING_MODEL,
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True},
     )
     return llm, embeddings
 
