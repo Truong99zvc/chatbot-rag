@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UIT Academic Policies Chatbot</title>
+  <meta name="description" content="Chatbot hỏi đáp về Quy chế, Quy định và Quy trình Đào tạo Đại học Chính quy – Trường ĐH Công nghệ Thông tin ĐHQG TP.HCM" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="url(#lg)"/>
+            <path d="M8 10h12M8 14h8M8 18h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="lg" x1="0" y1="0" x2="28" y2="28">
+                <stop offset="0%" stop-color="#4f6ef7"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">UIT</span>
+          <span class="logo-sub">Academic Policies</span>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Article search -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Tra cứu theo Điều</div>
+        <div class="article-search-row">
+          <input
+            id="article-input"
+            class="article-input"
+            type="number"
+            min="1"
+            placeholder="Số điều..."
+            autocomplete="off"
+          />
+          <button class="article-search-btn" id="article-search-btn" onclick="handleArticleSearch()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div id="article-result" class="article-result hidden"></div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Suggested questions -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Câu hỏi thường gặp</div>
+        <div class="suggested-list" id="sidebar-suggestions">
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Điều kiện tốt nghiệp?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Thang điểm chữ A, B, C là bao nhiêu?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Nghỉ bao nhiêu buổi thì bị cấm thi?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Cảnh báo học vụ xảy ra khi nào?</button>
+          <button class="suggestion-chip" onclick="askSuggestion(this)">Thời gian tối đa để hoàn thành chương trình?</button>
+        </div>
+      </div>
+
+      <!-- Sidebar footer -->
+      <div class="sidebar-footer">
+        <button class="new-chat-btn" onclick="startNewChat()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Cuộc hội thoại mới
+        </button>
+        <div class="session-info">
+          <span class="session-label">Session</span>
+          <span class="session-id" id="session-display">—</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Main chat area ── -->
+    <main class="chat-main">
+
+      <!-- Header -->
+      <header class="chat-header">
+        <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="header-title-group">
+          <h1 class="header-title">UIT Academic Policies Chatbot</h1>
+          <p class="header-sub">Quy chế · Quy định · Quy trình đào tạo chính quy</p>
+        </div>
+        <div class="header-status">
+          <span class="status-dot" id="status-dot"></span>
+          <span class="status-text" id="status-text">Đang kiểm tra...</span>
+        </div>
+      </header>
+
+      <!-- Messages -->
+      <div class="messages-area" id="messages-area">
+
+        <!-- Welcome screen (shown when no messages) -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-icon">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+              <rect width="56" height="56" rx="16" fill="url(#wlg)"/>
+              <path d="M16 20h24M16 28h16M16 36h20" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="wlg" x1="0" y1="0" x2="56" y2="56">
+                  <stop offset="0%" stop-color="#4f6ef7"/>
+                  <stop offset="100%" stop-color="#7c3aed"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h2 class="welcome-title">Xin chào! Tôi có thể giúp gì cho bạn?</h2>
+          <p class="welcome-desc">
+            Tôi là trợ lý tư vấn học vụ UIT. Hỏi tôi bất kỳ câu hỏi nào về<br/>
+            quy chế, quy định và quy trình đào tạo đại học chính quy.
+          </p>
+          <div class="welcome-chips" id="welcome-chips">
+            <button class="welcome-chip" onclick="askSuggestion(this)">📋 Điều kiện xét tốt nghiệp?</button>
+            <button class="welcome-chip" onclick="askSuggestion(this)">📊 Bảng quy đổi thang điểm chữ?</button>
+            <button class="welcome-chip" onclick="askSuggestion(this)">⚠️ Khi nào bị cảnh báo học vụ?</button>
+            <button class="welcome-chip" onclick="askSuggestion(this)">📅 Thời gian tối đa được học?</button>
+            <button class="welcome-chip" onclick="askSuggestion(this)">🏫 Điều kiện đăng ký khóa luận?</button>
+            <button class="welcome-chip" onclick="askSuggestion(this)">🔄 Điều kiện bảo lưu học tập?</button>
+          </div>
+        </div>
+
+        <!-- Message list -->
+        <div class="message-list" id="message-list"></div>
+
+        <!-- Typing indicator -->
+        <div class="typing-indicator hidden" id="typing-indicator">
+          <div class="typing-avatar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect width="16" height="16" rx="5" fill="url(#tlg)"/>
+              <path d="M4 6h8M4 10h5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="tlg" x1="0" y1="0" x2="16" y2="16">
+                  <stop offset="0%" stop-color="#4f6ef7"/>
+                  <stop offset="100%" stop-color="#7c3aed"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+      </div><!-- /messages-area -->
+
+      <!-- Input bar -->
+      <div class="input-bar">
+        <div class="input-wrapper">
+          <textarea
+            id="chat-input"
+            class="chat-input"
+            placeholder="Hỏi về quy chế đào tạo UIT... (Enter để gửi, Shift+Enter xuống dòng)"
+            rows="1"
+            autocomplete="off"
+          ></textarea>
+          <button class="send-btn" id="send-btn" onclick="handleSend()" disabled>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M15.5 9L2.5 2.5L6 9L2.5 15.5L15.5 9Z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">Powered by Gemini 2.0 Flash + FAISS RAG · UIT 2024</p>
+      </div>
+
+    </main>
+  </div><!-- /app -->
+
+  <!-- Toast notification -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

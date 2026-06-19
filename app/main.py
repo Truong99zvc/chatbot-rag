@@ -5,15 +5,20 @@ Knowledge base: Quy chế, quy định, quy trình đào tạo đại học chí
                 (pre-indexed via `make build-index`)
 """
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config.settings import settings
 from app.api import health, rag
 from app.middleware.error_handler import register_error_handlers
 from app.middleware.logger import LoggerMiddleware
 from app.middleware.rate_limiter import RateLimiterMiddleware
+
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 @asynccontextmanager
@@ -62,6 +67,15 @@ def create_app() -> FastAPI:
     # Routers
     app.include_router(health.router, prefix="/health", tags=["Health"])
     app.include_router(rag.router, prefix="/api/v1/rag", tags=["RAG – Quy chế UIT"])
+
+    # Serve the chat UI at the root
+    if STATIC_DIR.exists():
+        app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+        @app.get("/", include_in_schema=False, tags=["UI"])
+        async def serve_ui() -> FileResponse:
+            """Serve the chat web interface."""
+            return FileResponse(str(STATIC_DIR / "index.html"))
 
     return app
 
