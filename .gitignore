@@ -79,6 +79,11 @@ vectorstores/faiss/current_index/
 logs/
 *.log
 
+# Evaluation outputs (generated — not committed; dataset & scripts are committed)
+tests/evaluation/evaluated_answers.json
+tests/evaluation/evaluation_results.json
+tests/evaluation/evaluation_summary.json
+
 # Streamlit
 .streamlit/
 streamlit_app.log

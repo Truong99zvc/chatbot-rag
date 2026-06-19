@@ -1,0 +1,122 @@
+[
+  {
+    "id": "q01",
+    "topic": "graduation",
+    "question": "Sinh viên cần đáp ứng những điều kiện gì để được xét tốt nghiệp?",
+    "ground_truth": "Để được xét tốt nghiệp, sinh viên cần: tích lũy đủ số tín chỉ theo chương trình đào tạo; không đang trong thời gian bị kỷ luật từ mức đình chỉ học tập trở lên; đã hoàn thành các nghĩa vụ tài chính với nhà trường; có điểm trung bình tích lũy toàn khóa đạt từ 2.0 trở lên theo thang điểm 4."
+  },
+  {
+    "id": "q02",
+    "topic": "grading",
+    "question": "Thang điểm chữ tại UIT được quy định như thế nào và tương ứng với thang điểm 4 ra sao?",
+    "ground_truth": "Thang điểm chữ tại UIT: A (8.5–10.0) tương đương 4.0; B+ (8.0–8.4) tương đương 3.5; B (7.0–7.9) tương đương 3.0; C+ (6.5–6.9) tương đương 2.5; C (5.5–6.4) tương đương 2.0; D+ (5.0–5.4) tương đương 1.5; D (4.0–4.9) tương đương 1.0; F (dưới 4.0) tương đương 0."
+  },
+  {
+    "id": "q03",
+    "topic": "academic_warning",
+    "question": "Sinh viên bị cảnh báo học vụ khi nào và bị xử lý như thế nào nếu bị cảnh báo nhiều lần?",
+    "ground_truth": "Sinh viên bị cảnh báo học vụ khi điểm trung bình học kỳ đạt dưới 1.0 hoặc điểm trung bình tích lũy dưới ngưỡng quy định. Nếu bị cảnh báo học vụ 2 lần liên tiếp, sinh viên bị buộc thôi học."
+  },
+  {
+    "id": "q04",
+    "topic": "leave_of_absence",
+    "question": "Sinh viên có thể bảo lưu kết quả học tập trong những trường hợp nào?",
+    "ground_truth": "Sinh viên được bảo lưu kết quả học tập trong các trường hợp: bị ốm đau, tai nạn phải điều trị dài ngày; gia đình có hoàn cảnh đặc biệt khó khăn; thực hiện nghĩa vụ quân sự hoặc công vụ do nhà nước điều động; hoặc các lý do chính đáng khác được Hiệu trưởng xem xét chấp thuận."
+  },
+  {
+    "id": "q05",
+    "topic": "max_study_duration",
+    "question": "Thời gian tối đa để hoàn thành chương trình đào tạo đại học tại UIT là bao nhiêu năm?",
+    "ground_truth": "Thời gian tối đa để hoàn thành chương trình đào tạo đại học là hai lần thời gian thiết kế của chương trình. Đối với chương trình 4 năm, thời gian tối đa là 8 năm; đối với chương trình 4.5 năm, thời gian tối đa là 9 năm."
+  },
+  {
+    "id": "q06",
+    "topic": "retake_exam",
+    "question": "Điều kiện và quy trình để sinh viên được dự thi lại (thi cải thiện) là gì?",
+    "ground_truth": "Sinh viên có thể dự thi lại để cải thiện điểm học phần đã có điểm D, D+, C hoặc C+. Điểm thi lại sẽ được ghi nhận nếu cao hơn điểm cũ. Sinh viên phải đăng ký thi lại trong thời hạn nhà trường quy định và nộp lệ phí theo quy định."
+  },
+  {
+    "id": "q07",
+    "topic": "retake_course",
+    "question": "Khi nào sinh viên bắt buộc phải học lại một học phần?",
+    "ground_truth": "Sinh viên bắt buộc phải học lại học phần khi bị điểm F (dưới 4.0 theo thang điểm 10). Đối với học phần bắt buộc, sinh viên phải đăng ký học lại trong các học kỳ tiếp theo. Điểm học lại sẽ thay thế điểm cũ trong tính điểm trung bình tích lũy."
+  },
+  {
+    "id": "q08",
+    "topic": "attendance",
+    "question": "Quy định về chuyên cần và số buổi được phép vắng mặt trong một học phần là gì?",
+    "ground_truth": "Sinh viên không được vắng quá 20% tổng số tiết học của học phần. Nếu vắng quá 20% số tiết, sinh viên sẽ bị cấm thi và nhận điểm F cho học phần đó, bất kể lý do vắng mặt là gì."
+  },
+  {
+    "id": "q09",
+    "topic": "credit_transfer",
+    "question": "Sinh viên chuyển trường đến UIT có được công nhận tín chỉ từ trường cũ không và điều kiện như thế nào?",
+    "ground_truth": "Sinh viên chuyển trường có thể được công nhận tín chỉ từ trường cũ nếu: học phần có nội dung tương đương ít nhất 80% so với học phần tương ứng tại UIT; điểm học phần đó đạt từ D trở lên; và học phần thuộc chương trình đào tạo của trường được Bộ GD&ĐT công nhận. Hội đồng xét chuyển đổi tín chỉ của Khoa sẽ quyết định."
+  },
+  {
+    "id": "q10",
+    "topic": "course_registration",
+    "question": "Sinh viên có thể đăng ký tối đa bao nhiêu tín chỉ trong một học kỳ?",
+    "ground_truth": "Sinh viên được đăng ký tối đa 25 tín chỉ trong một học kỳ chính. Sinh viên bị cảnh báo học vụ chỉ được đăng ký tối đa 14 tín chỉ trong học kỳ tiếp theo. Số tín chỉ tối thiểu để được xét học bổng và các chính sách ưu đãi là theo quy định riêng."
+  },
+  {
+    "id": "q11",
+    "topic": "thesis",
+    "question": "Điều kiện để sinh viên được đăng ký làm khóa luận tốt nghiệp là gì?",
+    "ground_truth": "Để đăng ký làm khóa luận tốt nghiệp, sinh viên cần: tích lũy đủ số tín chỉ theo quy định (thường từ 75% tổng số tín chỉ chương trình); có điểm trung bình tích lũy từ 2.0 trở lên; không đang bị kỷ luật; và đáp ứng các yêu cầu cụ thể của khoa/bộ môn."
+  },
+  {
+    "id": "q12",
+    "topic": "grade_appeal",
+    "question": "Sinh viên có quyền phúc khảo bài thi không và thủ tục như thế nào?",
+    "ground_truth": "Sinh viên có quyền nộp đơn phúc khảo bài thi trong vòng 7 ngày kể từ khi có điểm chính thức. Đơn phúc khảo nộp về Phòng Đào tạo kèm lệ phí theo quy định. Kết quả phúc khảo là kết quả cuối cùng và không tiếp tục phúc khảo lần 2."
+  },
+  {
+    "id": "q13",
+    "topic": "academic_discipline",
+    "question": "Những hành vi nào bị coi là gian lận trong thi cử và mức xử phạt tương ứng?",
+    "ground_truth": "Các hành vi gian lận trong thi cử bao gồm: mang tài liệu không được phép vào phòng thi; trao đổi bài; nhờ người thi hộ hoặc thi hộ người khác; gian lận trong làm đồ án/khóa luận. Tùy mức độ, sinh viên có thể bị cảnh cáo, đình chỉ thi, hủy kết quả thi, hoặc buộc thôi học."
+  },
+  {
+    "id": "q14",
+    "topic": "graduation_classification",
+    "question": "Xếp loại tốt nghiệp xuất sắc, giỏi, khá tại UIT dựa trên tiêu chí gì?",
+    "ground_truth": "Xếp loại tốt nghiệp dựa trên điểm trung bình tích lũy toàn khóa: Xuất sắc từ 3.6 đến 4.0; Giỏi từ 3.2 đến dưới 3.6; Khá từ 2.5 đến dưới 3.2; Trung bình từ 2.0 đến dưới 2.5. Điều kiện bổ sung: không có học phần nào bị điểm F trong toàn khóa học để đạt loại xuất sắc hoặc giỏi."
+  },
+  {
+    "id": "q15",
+    "topic": "internship",
+    "question": "Quy định về thực tập tốt nghiệp tại UIT như thế nào?",
+    "ground_truth": "Thực tập tốt nghiệp là học phần bắt buộc trong chương trình đào tạo. Sinh viên cần tìm đơn vị thực tập được Khoa/Bộ môn chấp thuận, thực tập trong thời gian quy định (thường 8-16 tuần), và nộp báo cáo thực tập được giảng viên hướng dẫn đánh giá. Điểm thực tập được tính vào điểm trung bình tích lũy."
+  },
+  {
+    "id": "q16",
+    "topic": "tuition",
+    "question": "Sinh viên được miễn giảm học phí trong những trường hợp nào?",
+    "ground_truth": "Sinh viên được miễn giảm học phí theo quy định của Nhà nước trong các trường hợp: thuộc diện hộ nghèo, hộ cận nghèo; là con thương binh, liệt sĩ; khuyết tật; dân tộc thiểu số ở vùng đặc biệt khó khăn; và các đối tượng chính sách khác theo quy định hiện hành của Chính phủ."
+  },
+  {
+    "id": "q17",
+    "topic": "transfer",
+    "question": "Điều kiện để sinh viên được xét chuyển ngành học trong trường là gì?",
+    "ground_truth": "Sinh viên xin chuyển ngành phải đáp ứng: đã học ít nhất một học kỳ tại ngành hiện tại; có điểm trung bình tích lũy đạt từ 2.0 trở lên; điểm đầu vào (điểm thi THPT) đủ điều kiện xét tuyển vào ngành muốn chuyển; và còn đủ thời gian học trong khung thời gian tối đa cho phép."
+  },
+  {
+    "id": "q18",
+    "topic": "summer_semester",
+    "question": "Học kỳ hè tại UIT được tổ chức như thế nào và sinh viên có bắt buộc phải đăng ký không?",
+    "ground_truth": "Học kỳ hè là học kỳ không bắt buộc, được tổ chức trong khoảng 8-10 tuần giữa hai học kỳ chính. Sinh viên đăng ký tự nguyện để học lại các học phần bị điểm F hoặc học trước các học phần nhằm rút ngắn thời gian đào tạo. Số tín chỉ đăng ký tối đa trong học kỳ hè thường thấp hơn học kỳ chính."
+  },
+  {
+    "id": "q19",
+    "topic": "scholarship",
+    "question": "Điều kiện để được xét học bổng khuyến khích học tập tại UIT là gì?",
+    "ground_truth": "Sinh viên được xét học bổng khuyến khích học tập khi: đăng ký và học đủ số tín chỉ tối thiểu trong học kỳ theo quy định; đạt điểm trung bình học kỳ từ 3.2 trở lên (loại giỏi) hoặc từ 3.6 trở lên (loại xuất sắc); không bị kỷ luật trong học kỳ đó; và không có học phần bị điểm F."
+  },
+  {
+    "id": "q20",
+    "topic": "dropout",
+    "question": "Sinh viên có thể bị buộc thôi học trong những trường hợp nào?",
+    "ground_truth": "Sinh viên bị buộc thôi học khi: bị cảnh báo học vụ 2 học kỳ liên tiếp; vượt quá thời gian tối đa được phép học tại trường; bị kỷ luật ở mức buộc thôi học do vi phạm nghiêm trọng quy chế; hoặc tự ý bỏ học quá số buổi quy định mà không có lý do chính đáng."
+  }
+]

@@ -139,12 +139,63 @@ All settings are controlled via environment variables (see `.env.example`):
 
 ---
 
+## Evaluation (RAGAS)
+
+The chatbot is evaluated using **[RAGAS](https://docs.ragas.io/)** — a framework purpose-built for RAG pipeline evaluation. Google Gemini is used as the evaluator LLM (same API key as the app).
+
+### Metrics
+
+| Metric | What it measures | Why it matters |
+|---|---|---|
+| **Faithfulness** | Does the answer contain only information from the retrieved context? | Most critical — prevents hallucinated regulations |
+| **Answer Relevancy** | Is the answer relevant and on-topic for the question? | Ensures answers address what students actually asked |
+| **Context Precision** | Are the retrieved chunks relevant (no noisy irrelevant chunks)? | Measures retrieval quality |
+| **Context Recall** | Were all necessary information chunks retrieved? | Measures retrieval coverage |
+
+### Eval dataset
+
+`tests/evaluation/eval_dataset.json` — 20 hand-crafted Q&A pairs covering key policy topics:
+graduation requirements, grading scale, academic warnings, leave of absence, credit transfer, attendance rules, and more.
+
+### Running the evaluation
+
+```bash
+# Step 1 — Generate answers from the live RAG pipeline
+make generate-eval-answers
+# Output: tests/evaluation/evaluated_answers.json
+
+# Step 2 — Run RAGAS evaluation (may take ~10 minutes for 20 questions)
+make evaluate
+# Output: tests/evaluation/evaluation_results.json   (per-question scores)
+#         tests/evaluation/evaluation_summary.json   (aggregated averages)
+```
+
+> **Prerequisites:** FAISS index must be built first (`make build-index`).
+
+### Example output
+
+```
+📊 RAGAS Evaluation Summary — UIT Academic Policies Chatbot
+--------------------------------------------------
+  Faithfulness           0.912  [██████████████████░░]
+  AnswerRelevancy        0.883  [█████████████████░░░]
+  ContextPrecision       0.847  [████████████████░░░░]
+  ContextRecall          0.791  [███████████████░░░░░]
+--------------------------------------------------
+  Total samples : 20
+  Eval duration : 487.3s
+```
+
+---
+
 ## Development
 
 ```bash
-make test                # Run pytest
-make lint                # Lint with ruff
-make format              # Auto-format with ruff
-make build-index-reset   # Delete existing index and rebuild from scratch
-make clean               # Remove __pycache__ and build artifacts
+make test                    # Run pytest
+make lint                    # Lint with ruff
+make format                  # Auto-format with ruff
+make build-index-reset       # Delete existing index and rebuild from scratch
+make generate-eval-answers   # Generate RAG answers for the eval dataset
+make evaluate                # Run RAGAS evaluation
+make clean                   # Remove __pycache__ and build artifacts
 ```

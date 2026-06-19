@@ -1,4 +1,4 @@
-.PHONY: run dev install build-index test lint format clean
+.PHONY: run dev install build-index build-index-reset generate-eval-answers evaluate test lint format clean
 
 run:
 	uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -14,6 +14,12 @@ build-index:
 
 build-index-reset:
 	python scripts/build_index.py --reset
+
+generate-eval-answers:
+	python tests/evaluation/generate_answers.py
+
+evaluate:
+	python tests/evaluation/ragas_eval.py
 
 test:
 	pytest tests/ -v --tb=short
