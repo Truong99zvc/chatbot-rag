@@ -91,7 +91,7 @@ def _import_ragas():
 
 def build_evaluator_llm_and_embeddings():
     """Set up HuggingFace as RAGAS evaluator (reuses the app's HF token)."""
-    from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint, HuggingFaceEmbeddings
+    from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint, HuggingFaceEndpointEmbeddings
 
     if not settings.HF_TOKEN:
         logger.error("HF_TOKEN is not set in .env")
@@ -106,10 +106,10 @@ def build_evaluator_llm_and_embeddings():
     )
     llm = ChatHuggingFace(llm=endpoint)
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name=settings.EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True},
+    embeddings = HuggingFaceEndpointEmbeddings(
+        model=settings.EMBEDDING_MODEL,
+        task="feature-extraction",
+        huggingfacehub_api_token=settings.HF_TOKEN,
     )
     return llm, embeddings
 
