@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, field_validator
 
 from app.config.settings import settings
-from app.rag.pipeline import RAGPipeline, get_session_history, _save_all_sessions, _load_all_sessions
+from app.rag.pipeline import RAGPipeline, get_session_history, clear_session_history
 
 router = APIRouter()
 
@@ -140,7 +140,4 @@ async def get_session(session_id: str) -> SessionResponse:
 )
 async def clear_session(session_id: str) -> None:
     """Xóa toàn bộ lịch sử hội thoại của *session_id*."""
-    sessions = _load_all_sessions()
-    if session_id in sessions:
-        del sessions[session_id]
-        _save_all_sessions(sessions)
+    clear_session_history(session_id)

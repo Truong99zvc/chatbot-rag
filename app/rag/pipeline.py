@@ -1,25 +1,22 @@
 """
 RAG Pipeline for the UIT Quy Chế Đào Tạo Chatbot.
 
-Orchestrates the full Retrieve-Augment-Generate flow:
-  1. Load session history from JSON file store
-  2. Retrieve relevant chunks from pre-built FAISS index
-  3. Build context + memory block
-  4. Generate answer with Gemini
-  5. Persist updated session history
-
-Session history is stored in a JSON file (SESSION_STORE_FILE) keyed by session_id.
-This is simple and sufficient for single-server deployment.
+Orchestrates the full Retrieve-Augment-Generate flow using LangGraph Agent:
+  1. Load session history from SQL database (SQLAlchemy)
+  2. Invoke LangGraph Agent (Routing -> Rewriting -> Hybrid Retrieve -> Grade -> Generate -> Hallucination Check)
+  3. Persist updated session history in the database.
 """
 from __future__ import annotations
 
-import json
 import logging
+from typing import Dict, List
 
 from app.config.settings import settings
+from app.database.connection import SessionLocal
+from app.database.models import ChatSession, ChatTurn
 from app.embeddings.embedder import get_embeddings
+from app.rag.agent import UITAcademicAgent
 from app.rag.generator import Generator
-from app.rag.prompt_builder import build_memory_context, build_rag_prompt
 from app.rag.retriever import Retriever
 from app.vectorstore.vector_db import VectorDB
 
@@ -27,44 +24,66 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# JSON-backed session store
+# SQL Database Session Store Helper Functions
 # ---------------------------------------------------------------------------
 
-def _load_all_sessions() -> dict[str, list[dict]]:
-    """Load all session histories from the JSON store file."""
-    store_file = settings.SESSION_STORE_FILE
-    if not store_file.exists():
-        return {}
+def get_session_history(session_id: str) -> List[dict]:
+    """Return the conversation history for *session_id* from database."""
+    db = SessionLocal()
     try:
-        data = json.loads(store_file.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        logger.warning("Session store file corrupted, starting fresh.")
-        return {}
+        session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+        if not session:
+            return []
+        # Sort turns by id (insertion order)
+        turns = sorted(session.turns, key=lambda t: t.id)
+        return [{"question": t.question, "answer": t.answer} for t in turns]
+    except Exception as e:
+        logger.error("Failed to query session history: %s", e)
+        return []
+    finally:
+        db.close()
 
 
-def _save_all_sessions(sessions: dict[str, list[dict]]) -> None:
-    """Persist all session histories to the JSON store file."""
-    store_file = settings.SESSION_STORE_FILE
-    store_file.parent.mkdir(parents=True, exist_ok=True)
-    store_file.write_text(
-        json.dumps(sessions, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+def append_to_session(session_id: str, question: str, answer: str, sources: str = "") -> None:
+    """Append a Q&A turn to the session history and persist to database."""
+    db = SessionLocal()
+    try:
+        session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+        if not session:
+            session = ChatSession(session_id=session_id)
+            db.add(session)
+            db.commit()
+            db.refresh(session)
+            
+        turn = ChatTurn(
+            session_id=session_id,
+            question=question,
+            answer=answer,
+            sources=sources
+        )
+        db.add(turn)
+        db.commit()
+    except Exception as e:
+        logger.error("Failed to save chat turn: %s", e)
+        db.rollback()
+    finally:
+        db.close()
 
 
-def get_session_history(session_id: str) -> list[dict]:
-    """Return the conversation history for *session_id*."""
-    return _load_all_sessions().get(session_id, [])
-
-
-def append_to_session(session_id: str, question: str, answer: str) -> None:
-    """Append a Q&A turn to the session history and persist."""
-    sessions = _load_all_sessions()
-    sessions.setdefault(session_id, []).append(
-        {"question": question, "answer": answer}
-    )
-    _save_all_sessions(sessions)
+def clear_session_history(session_id: str) -> None:
+    """Clear conversation history for *session_id* from database."""
+    db = SessionLocal()
+    try:
+        session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+        if session:
+            db.delete(session)
+            db.commit()
+            logger.info("Session %s history cleared.", session_id)
+    except Exception as e:
+        logger.error("Failed to clear session %s history: %s", session_id, e)
+        db.rollback()
+    finally:
+        db.close()
 
 
 # ---------------------------------------------------------------------------
@@ -73,10 +92,8 @@ def append_to_session(session_id: str, question: str, answer: str) -> None:
 
 class RAGPipeline:
     """
-    Orchestrates the full RAG flow for UIT training regulations Q&A.
-
-    The FAISS index must be pre-built via `scripts/build_index.py`.
-    If the index does not exist, initialization raises a clear error.
+    Orchestrates the full Agentic RAG flow for UIT training regulations Q&A.
+    Uses LangGraph for decision routing and self-correction.
     """
 
     def __init__(self) -> None:
@@ -93,40 +110,28 @@ class RAGPipeline:
 
         self._retriever = Retriever(vector_store)
         self._generator = Generator()
-        self._prompt = build_rag_prompt()
+        # Initialize LangGraph Agent
+        self._agent = UITAcademicAgent(self._retriever, self._generator)
 
     async def run(self, question: str, session_id: str = "default") -> dict:
         """
-        Execute the RAG pipeline for a given question.
+        Execute the LangGraph Agentic RAG pipeline for a given question.
 
         Returns:
             dict with keys: answer, sources, session_id
         """
         history = get_session_history(session_id)
 
-        docs = self._retriever.retrieve(question)
-        if not docs:
-            no_context_answer = (
-                "Tôi không tìm thấy thông tin liên quan trong Quy chế Đào tạo UIT. "
-                "Bạn vui lòng liên hệ Phòng Đào tạo – phòng A101 hoặc "
-                "email daotao@uit.edu.vn để được hỗ trợ."
-            )
-            append_to_session(session_id, question, no_context_answer)
-            return {"answer": no_context_answer, "sources": ""}
+        # Run the LangGraph Agent
+        result = self._agent.run(question, history=history)
+        
+        answer = result["answer"]
+        sources = result["sources"]
 
-        context = self._retriever.format_context(docs)
-        sources = self._retriever.format_sources(docs)
-        memory_context = build_memory_context(history, max_turns=settings.MAX_HISTORY_TURNS)
-
-        answer = self._generator.generate(
-            self._prompt,
-            context=context,
-            question=question,
-            memory_context=memory_context,
-        )
-
-        append_to_session(session_id, question, answer)
-        return {"answer": answer, "sources": sources}
+        # Persist Q&A turn to SQL DB
+        append_to_session(session_id, question, answer, sources)
+        
+        return {"answer": answer, "sources": sources, "session_id": session_id}
 
     def search_article(self, article_number: str | int) -> dict:
         """
