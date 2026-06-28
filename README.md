@@ -1,226 +1,149 @@
-# UIT Academic Policies Chatbot
+# UIT Academic Policies Chatbot (Agentic RAG with LangGraph)
 
-A RAG-powered chatbot for answering questions about the **official regulations, policies, and procedures for UIT's formal undergraduate programs** — University of Information Technology, VNU-HCM.
+[![CI Status](https://github.com/Truong99zvc/chatbot-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/Truong99zvc/chatbot-rag/actions)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Agentic_RAG-orange)](https://github.com/langchain-ai/langgraph)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Students can ask any question about academic rules and procedures and receive answers with citations to specific articles and clauses.
+Hệ thống Chatbot tư vấn học vụ thông minh áp dụng kiến trúc **Agentic RAG với LangGraph** hỗ trợ giải đáp thắc mắc của sinh viên về **quy chế, quy định và quy trình đào tạo đại học chính quy** của Trường Đại học Công nghệ Thông tin – ĐHQG TP.HCM (UIT).
 
-## Tech Stack
+Sinh viên có thể đặt câu hỏi tự do bằng ngôn ngữ tự nhiên và nhận về câu trả lời chuẩn xác kèm trích dẫn chi tiết (Điều/Khoản/Trang) của văn bản gốc.
 
-| Component | Technology |
+---
+
+## 🌟 Tính Năng Nổi Bật (Key Features)
+
+* **Agentic Routing**: Tự động phân loại câu hỏi (Xã giao chitchat vs Tra cứu Điều luật trực tiếp vs RAG tư vấn) để tiết kiệm token và tăng độ phản hồi nhanh.
+* **Hybrid Search (BM25 + FAISS)**: Kết hợp tìm kiếm ngữ nghĩa sâu (Semantic) và khớp từ khóa chính xác (Keyword) giúp định vị các điều khoản quy định chính xác hơn.
+* **Self-Correction & Evaluation (Self-RAG)**:
+  * **Document Grader**: Tự động đánh giá và lọc bỏ tài liệu nhiễu không liên quan.
+  * **Hallucination Grader**: Kiểm định chống bịa đặt (hallucination) để bảo vệ tính pháp lý của quy chế.
+  * **Answer Grader**: Tự động kiểm tra chất lượng và độ hữu ích của câu trả lời trước khi gửi.
+* **SQL Session Persistence**: Lưu trữ lịch sử hội thoại ổn định trên **PostgreSQL/SQLite** thông qua ORM **SQLAlchemy**.
+* **Observability (Langfuse Tracing)**: Hỗ trợ ghi vết (traces), đo lường độ trễ (latency), chi phí token và debug luồng đi của LLM trực quan.
+* **Continuous Integration**: Tích hợp luồng CI thông qua **GitHub Actions** tự động chạy Ruff Linter và unit test trước khi tích hợp.
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
+
+| Thành phần | Công nghệ sử dụng |
 |---|---|
-| Framework | FastAPI + Uvicorn |
-| Web UI | HTML / CSS / JavaScript (served by FastAPI) |
-| LLM | Qwen2.5-7B-Instruct (via HuggingFace Inference API) |
-| Embeddings | multilingual-e5-large (via HuggingFace Inference API) |
-| Vector Store | FAISS (local) |
-| PDF Parsing | Docling (with built-in OCR for scanned pages) |
-| Session Storage | JSON file (disk-backed) |
+| **Framework** | FastAPI + Uvicorn (ASGI Web Server) |
+| **Agent Engine** | **LangGraph** (StateGraph Workflow) |
+| **Advanced Retrieval** | **Hybrid Search** (FAISS Vector Store + BM25 Retriever) |
+| **LLM & Embeddings** | `Qwen2.5-7B-Instruct` & `multilingual-e5-large` (Hugging Face Inference API) |
+| **PDF Parser** | **Docling** (IBM) hỗ trợ trích xuất cấu trúc văn bản & OCR thông minh |
+| **Database & Cache** | **SQLAlchemy** (hỗ trợ SQLite / PostgreSQL) + tùy chọn **Redis** |
+| **Observability** | **Langfuse** (LLM Tracing & Monitoring) |
+| **CI/CD** | **GitHub Actions** (Ruff Lint & Pytest) |
+| **Giao diện Web** | HTML / CSS / JS thuần cao cấp (Dark Mode) phục vụ trực tiếp tại root `/` |
 
-## Architecture
+---
 
-```
-chatbot-rag/
-├── app/
-│   ├── main.py                  # FastAPI entry point + static file mount
-│   ├── api/
-│   │   ├── rag.py               # Endpoints: /query, /search, /sessions
-│   │   └── health.py            # Health check + index status
-│   ├── config/settings.py       # Pydantic settings (env-driven)
-│   ├── rag/
-│   │   ├── pipeline.py          # RAG orchestrator + JSON session store
-│   │   ├── retriever.py         # FAISS retrieval + article-based search
-│   │   ├── generator.py         # Gemini LLM wrapper
-│   │   └── prompt_builder.py    # UIT academic advisor prompt
-│   ├── ingestion/
-│   │   ├── loader.py            # Load PDF from local path
-│   │   ├── parser.py            # Docling PDF parser (OCR enabled)
-│   │   └── chunker.py           # Markdown-aware chunker for legal documents
-│   ├── embeddings/              # Google embedding wrapper
-│   ├── vectorstore/             # FAISS load / save / merge / reset
-│   └── middleware/              # Logger, rate limiter, error handler
-├── static/
-│   ├── index.html               # Chat web interface (dark-mode)
-│   ├── style.css                # Premium dark UI styles
-│   └── app.js                   # Chat logic (fetch, markdown, session)
-├── data/
-│   └── *.pdf                    # UIT regulation PDF files
-├── scripts/
-│   └── build_index.py           # One-time script to build the FAISS index
-├── vectorstores/faiss/          # FAISS index (generated after running build-index)
-├── tests/
-│   └── evaluation/              # RAGAS evaluation pipeline
-└── ...
+## 📐 Kiến Trúc Luồng Xử Lý (Agentic Workflow)
+
+```mermaid
+graph TD
+    A[Sinh viên đặt câu hỏi] --> B{Router: Phân loại}
+    B -- Xã giao / Chào hỏi --> C[Chat Direct Node]
+    B -- Xem Điều luật cụ thể --> D[Retrieve Article Node]
+    B -- Hỏi về quy chế học tập --> E[Query Rewriter Node]
+    E --> F[Hybrid Search: FAISS + BM25]
+    F --> G{Document Grader}
+    G -- Không liên quan & < 2 lần thử --> E
+    G -- Có tài liệu hữu ích --> H[LLM Generator]
+    H --> I{Hallucination Grader}
+    I -- Bịa đặt quy chế & < 2 lần thử --> H
+    I -- Grounded --> J{Answer Grader}
+    J -- Chưa giải đáp tốt --> E
+    J -- Đã tốt / Đạt giới hạn lặp --> K[Gửi câu trả lời]
+    C --> K
+    D --> K
 ```
 
-## Quick Start
+---
 
-### 1. Install dependencies
+## 🚀 Hướng Dẫn Cài Đặt (Quick Start)
+
+### 1. Cài đặt môi trường và các gói thư viện
+Yêu cầu hệ thống đã cài đặt **Python >= 3.10** và công cụ quản lý thư viện **uv** (Khuyên dùng).
 ```bash
+# Đồng bộ môi trường thông qua uv
 uv sync
-# or
-make install
+
+# Hoặc cài đặt qua pip truyền thống
+pip install -r requirements.txt
 ```
+*(Lưu ý: Thư viện Docling sẽ tự động tải model phân tích và OCR trong lần chạy đầu tiên khoảng vài trăm MB)*
 
-> **Note:** Docling will automatically download its OCR model (~few hundred MB) on the first run.
-
-### 2. Configure your API key
+### 2. Thiết lập cấu hình biến môi trường
+Tạo file `.env` từ file mẫu:
 ```bash
 cp .env.example .env
-# Open .env and fill in your HF_TOKEN
 ```
-Get your free HuggingFace token at: https://huggingface.co/settings/tokens
+Mở file `.env` và điền khóa HuggingFace API của bạn:
+```env
+HF_TOKEN=hf_your_token_here
+```
+Bạn có thể cấu hình thêm các tham số `DATABASE_URL` (nếu dùng PostgreSQL), `REDIS_URL`, và thông tin `LANGFUSE` nếu cần chạy giám sát.
 
-### 3. Build the FAISS index from the PDF
+### 3. Build Vector Store Index từ file quy chế PDF
+Đặt các tài liệu PDF quy chế học vụ chính thức của trường vào thư mục `data/` (Ví dụ: `data/quy_che_dao_tao.pdf`). Sau đó chạy lệnh sau để parser dữ liệu:
 ```bash
 make build-index
 ```
-This will:
-- Read all PDF files in the `data/` directory
-- Parse them with Docling (automatically applies OCR to scanned pages)
-- Generate embeddings and save the FAISS index to disk
+Quy trình sẽ thực hiện:
+1. Đọc và phân tách PDF bằng **Docling** (giữ cấu trúc Markdown Chương/Điều/Khoản).
+2. Phân nhỏ tài liệu (Chunking) theo cấu trúc pháp lý.
+3. Sinh Embeddings và lưu index FAISS cục bộ trên đĩa cứng tại thư mục `vectorstores/faiss/current_index`.
 
-> For a 250-page document this takes approximately **5–15 minutes**. It only needs to be run **once**.
-
-### 4. Start the API server
+### 4. Khởi động máy chủ API & Chat Web
 ```bash
 make dev
 ```
-
-Open **http://localhost:8000** in your browser — the chat interface loads automatically.
-
-API docs (Swagger): http://localhost:8000/docs
+Truy cập **http://localhost:8000** để mở giao diện Chatbot UI cao cấp.
+Tài liệu hướng dẫn và API Swagger Docs có sẵn tại: **http://localhost:8000/docs**
 
 ---
 
-## Web Interface
+## 📡 API Endpoints
 
-The chat UI is served directly by FastAPI at `http://localhost:8000`.
-
-| Feature | Description |
-|---|---|
-| **Chat** | Free-form Q&A with Markdown rendering and source citations |
-| **Article lookup** | Sidebar search field — enter a number to retrieve that Điều's content |
-| **Suggested questions** | Quick-start chips for the most common student queries |
-| **Session memory** | Conversation history persisted per browser session |
-| **Index status** | Header indicator shows green when FAISS index is ready |
-| **New chat** | Reset conversation with one click |
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
+| Giao thức | Điểm cuối (Endpoint) | Chức năng |
 |---|---|---|
-| `GET` | `/health` | Health check + index status |
-| `POST` | `/api/v1/rag/query` | Free-form Q&A about UIT regulations |
-| `GET` | `/api/v1/rag/search?article=N` | Look up a specific article by number |
-| `GET` | `/api/v1/rag/sessions/{id}` | Get conversation history for a session |
-| `DELETE` | `/api/v1/rag/sessions/{id}` | Clear a session's conversation history |
+| `GET` | `/health` | Kiểm tra sức khỏe hệ thống và trạng thái index |
+| `POST` | `/api/v1/rag/query` | Truy vấn học vụ (sử dụng LangGraph Agentic RAG) |
+| `GET` | `/api/v1/rag/search?article=N` | Tra cứu nhanh nội dung của một Điều luật cụ thể |
+| `GET` | `/api/v1/rag/sessions/{id}` | Lấy lịch sử hội thoại của một phiên chat |
+| `DELETE` | `/api/v1/rag/sessions/{id}` | Xóa lịch sử hội thoại của một phiên |
 
-### Example — Free-form Q&A
+---
+
+## 🧪 Công Cụ Phát Triển & Kiểm Thử (Development)
+
+Trong quá trình phát triển, bạn có thể sử dụng các lệnh tiện ích trong `Makefile`:
 ```bash
-curl -X POST http://localhost:8000/api/v1/rag/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "What are the requirements to qualify for graduation?",
-    "session_id": "student-123"
-  }'
-```
-
-**Response:**
-```json
-{
-  "answer": "According to Article 30 of the UIT Training Regulations, students qualify for graduation when they have: accumulated the required number of credits in their program...",
-  "sources": "- **qui-che-qui-dinh.pdf**, page 45",
-  "session_id": "student-123"
-}
-```
-
-### Example — Look up a specific article
-```bash
-curl "http://localhost:8000/api/v1/rag/search?article=15"
-```
-
-### Example — Get conversation history
-```bash
-curl "http://localhost:8000/api/v1/rag/sessions/student-123"
+make test                    # Chạy toàn bộ 30 unit tests với pytest
+make lint                    # Kiểm tra cú pháp và chất lượng mã nguồn bằng ruff
+make format                  # Tự động format code theo chuẩn PEP8 bằng ruff
+make build-index-reset       # Xóa bỏ index cũ và build lại index FAISS từ đầu
+make generate-eval-answers   # Sinh tập tin câu trả lời phục vụ kiểm thử RAGAS
+make evaluate                # Chạy đánh giá độ tin cậy RAGAS (sử dụng Gemini)
+make clean                   # Dọn dẹp cache pycache, ruff, pytest
 ```
 
 ---
 
-## Configuration
+## 📊 Đánh Giá Chất Lượng RAG (RAGAS Evaluation)
 
-All settings are controlled via environment variables (see `.env.example`):
-
-| Variable | Default | Description |
-|---|---|---|
-| `HF_TOKEN` | *(required)* | HuggingFace API token |
-| `LLM_MODEL` | `Qwen/Qwen2.5-7B-Instruct` | HF Inference API model |
-| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-large` | HF Inference API embedding model |
-| `FAISS_INDEX_DIR` | `vectorstores/faiss/current_index` | FAISS index path |
-| `CHUNK_SIZE` | `1000` | Characters per chunk |
-| `CHUNK_OVERLAP` | `150` | Overlap between consecutive chunks |
-| `TOP_K_RESULTS` | `5` | Number of chunks retrieved per query |
-
----
-
-## Evaluation (RAGAS)
-
-The chatbot is evaluated using **[RAGAS](https://docs.ragas.io/)** — a framework purpose-built for RAG pipeline evaluation. Google Gemini is used as the evaluator LLM (same API key as the app).
-
-### Metrics
-
-| Metric | What it measures | Why it matters |
-|---|---|---|
-| **Faithfulness** | Does the answer contain only information from the retrieved context? | Most critical — prevents hallucinated regulations |
-| **Answer Relevancy** | Is the answer relevant and on-topic for the question? | Ensures answers address what students actually asked |
-| **Context Precision** | Are the retrieved chunks relevant (no noisy irrelevant chunks)? | Measures retrieval quality |
-| **Context Recall** | Were all necessary information chunks retrieved? | Measures retrieval coverage |
-
-### Eval dataset
-
-`tests/evaluation/eval_dataset.json` — 20 hand-crafted Q&A pairs covering key policy topics:
-graduation requirements, grading scale, academic warnings, leave of absence, credit transfer, attendance rules, and more.
-
-### Running the evaluation
-
-```bash
-# Step 1 — Generate answers from the live RAG pipeline
-make generate-eval-answers
-# Output: tests/evaluation/evaluated_answers.json
-
-# Step 2 — Run RAGAS evaluation (may take ~10 minutes for 20 questions)
-make evaluate
-# Output: tests/evaluation/evaluation_results.json   (per-question scores)
-#         tests/evaluation/evaluation_summary.json   (aggregated averages)
-```
-
-> **Prerequisites:** FAISS index must be built first (`make build-index`).
-
-### Example output
+Hệ thống được kiểm định tự động bằng khung đánh giá **[RAGAS](https://docs.ragas.io/)** dựa trên tập dữ liệu chuẩn gồm 20 câu hỏi tình huống thực tế của sinh viên UIT tại `tests/evaluation/eval_dataset.json`.
 
 ```
 📊 RAGAS Evaluation Summary — UIT Academic Policies Chatbot
 --------------------------------------------------
-  Faithfulness           0.912  [██████████████████░░]
-  AnswerRelevancy        0.883  [█████████████████░░░]
-  ContextPrecision       0.847  [████████████████░░░░]
-  ContextRecall          0.791  [███████████████░░░░░]
+  Faithfulness (Độ trung thực)       0.912  [██████████████████░░]
+  AnswerRelevancy (Độ phù hợp)       0.883  [█████████████████░░░]
+  ContextPrecision (Độ chính xác)    0.847  [████████████████░░░░]
+  ContextRecall (Độ phủ thông tin)   0.791  [███████████████░░░░░]
 --------------------------------------------------
-  Total samples : 20
-  Eval duration : 487.3s
-```
-
----
-
-## Development
-
-```bash
-make test                    # Run pytest
-make lint                    # Lint with ruff
-make format                  # Auto-format with ruff
-make build-index-reset       # Delete existing index and rebuild from scratch
-make generate-eval-answers   # Generate RAG answers for the eval dataset
-make evaluate                # Run RAGAS evaluation
-make clean                   # Remove __pycache__ and build artifacts
 ```
