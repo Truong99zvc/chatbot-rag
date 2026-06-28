@@ -120,8 +120,8 @@ async def test_get_session_empty():
 @pytest.mark.asyncio
 async def test_clear_session():
     """Clearing a session should return 204 No Content."""
-    with patch("app.api.rag._load_all_sessions", return_value={"test-sess": []}), \
-         patch("app.api.rag._save_all_sessions"):
+    with patch("app.api.rag.clear_session_history") as mock_clear:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.delete("/api/v1/rag/sessions/test-sess")
     assert response.status_code == 204
+    mock_clear.assert_called_once_with("test-sess")
