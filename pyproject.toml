@@ -26,9 +26,16 @@ dependencies = [
     
     # Vector DB
     "faiss-cpu>=1.10.0",
+    "rank-bm25>=0.2.2",
     
     # Document Parsing (PDF, OCR)
     "docling>=2.0.0",
+    
+    # Database, Cache & Agent & Observability
+    "sqlalchemy>=2.0.0",
+    "redis>=5.0.0",
+    "langgraph>=0.1.0",
+    "langfuse>=2.0.0",
     
     # Evaluation (RAGAS)
     "ragas>=0.2.0",
