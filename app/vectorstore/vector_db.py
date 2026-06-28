@@ -1,6 +1,5 @@
 import logging
 import shutil
-from pathlib import Path
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore
@@ -39,9 +38,9 @@ class VectorDB:
         """
         if not documents:
             raise ValueError("No documents to index.")
-            
+
         client = self._get_client()
-        
+
         # Check if collection exists, if not create it
         try:
             if not client.collection_exists(self._collection_name):
@@ -58,7 +57,7 @@ class VectorDB:
                 )
         except Exception as e:
             logger.warning("Error checking or creating Qdrant collection: %s. Proceeding with insertion...", e)
-            
+
         store = QdrantVectorStore(
             client=client,
             collection_name=self._collection_name,
@@ -70,20 +69,20 @@ class VectorDB:
     def load(self) -> QdrantVectorStore:
         """Load the Qdrant vector store wrapper."""
         client = self._get_client()
-        
+
         # Verify collection exists before loading
         if not self._url and not self._local_path.exists():
             raise FileNotFoundError(
                 f"Qdrant local storage path '{self._local_path}' does not exist. "
                 "Please run `make build-index` first."
             )
-            
+
         if not client.collection_exists(self._collection_name):
             raise FileNotFoundError(
                 f"Qdrant collection '{self._collection_name}' not found. "
                 "Please build the index first."
             )
-            
+
         return QdrantVectorStore(
             client=client,
             collection_name=self._collection_name,
@@ -99,7 +98,7 @@ class VectorDB:
                 client.delete_collection(self._collection_name)
         except Exception as e:
             logger.warning("Failed to delete Qdrant collection: %s", e)
-            
+
         # Clean local folder if using disk
         if not self._url and self._local_path.exists():
             logger.info("Deleting local Qdrant directory: %s", self._local_path)
