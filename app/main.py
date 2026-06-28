@@ -17,12 +17,16 @@ from app.api import health, rag
 from app.middleware.error_handler import register_error_handlers
 from app.middleware.logger import LoggerMiddleware
 from app.middleware.rate_limiter import RateLimiterMiddleware
+from app.database.connection import init_db
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize SQL database tables
+    init_db()
+
     # Startup: validate that the FAISS index exists
     if not settings.FAISS_INDEX_DIR.exists():
         import logging
