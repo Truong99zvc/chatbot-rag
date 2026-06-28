@@ -20,15 +20,61 @@ class Retriever:
 
     def __init__(self, vector_store: FAISS) -> None:
         self._store = vector_store
+        
+        # Initialize BM25 retriever from FAISS docstore for Hybrid Search
+        self._bm25 = None
+        try:
+            docstore = getattr(vector_store, "docstore", None)
+            if docstore and hasattr(docstore, "_dict"):
+                all_docs = list(docstore._dict.values())
+                if all_docs:
+                    from langchain_community.retrievers import BM25Retriever
+                    self._bm25 = BM25Retriever.from_documents(all_docs)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Failed to initialize BM25Retriever for Hybrid Search: %s", e)
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
     def retrieve(self, query: str, k: int | None = None) -> list[Document]:
-        """Return the top-k most relevant chunks for *query*."""
+        """Return the top-k most relevant chunks using Hybrid Search (FAISS + BM25)."""
         k = k or settings.TOP_K_RESULTS
-        return self._store.similarity_search(query, k=k)
+        
+        # 1. Semantic search via FAISS
+        vector_results = self._store.similarity_search(query, k=k * 2)
+        
+        # 2. Keyword search via BM25
+        bm25_results = []
+        if self._bm25:
+            try:
+                self._bm25.k = k * 2
+                bm25_results = self._bm25.invoke(query)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning("BM25 retrieval failed: %s", e)
+                
+        # 3. Interleave and deduplicate results
+        seen: set[tuple] = set()
+        combined: list[Document] = []
+        
+        for i in range(max(len(vector_results), len(bm25_results))):
+            if i < len(vector_results):
+                doc = vector_results[i]
+                # Identify doc uniquely by content & page
+                doc_id = (doc.page_content, doc.metadata.get("source"), doc.metadata.get("page"))
+                if doc_id not in seen:
+                    seen.add(doc_id)
+                    combined.append(doc)
+            if i < len(bm25_results):
+                doc = bm25_results[i]
+                doc_id = (doc.page_content, doc.metadata.get("source"), doc.metadata.get("page"))
+                if doc_id not in seen:
+                    seen.add(doc_id)
+                    combined.append(doc)
+                    
+        return combined[:k]
 
     def search_by_article(self, article_number: str | int, k: int = 6) -> list[Document]:
         """
