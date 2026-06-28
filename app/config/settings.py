@@ -22,6 +22,9 @@ class Settings(BaseSettings):
 
     # Vector Store
     FAISS_INDEX_DIR: Path = Path("vectorstores/faiss/current_index")
+    QDRANT_URL: str = ""
+    QDRANT_PATH: Path = Path("vectorstores/qdrant")
+    QDRANT_COLLECTION: str = "uit_regulations"
 
     # Data
     DATA_DIR: Path = Path("data")
