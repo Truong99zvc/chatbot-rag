@@ -9,30 +9,50 @@ from __future__ import annotations
 
 import re
 
-from langchain_community.vectorstores import FAISS
+from langchain_qdrant import QdrantVectorStore
 from langchain_core.documents import Document
 
 from app.config.settings import settings
 
 
 class Retriever:
-    """Wraps a FAISS vector store for similarity-based document retrieval."""
+    """Wraps a Qdrant vector store for similarity-based document retrieval."""
 
-    def __init__(self, vector_store: FAISS) -> None:
+    def __init__(self, vector_store: QdrantVectorStore) -> None:
         self._store = vector_store
 
-        # Initialize BM25 retriever from FAISS docstore for Hybrid Search
+        # Initialize BM25 retriever from Qdrant scroll for Hybrid Search
         self._bm25 = None
         try:
-            docstore = getattr(vector_store, "docstore", None)
-            if docstore and hasattr(docstore, "_dict"):
-                all_docs = list(docstore._dict.values())
+            client = getattr(vector_store, "client", None)
+            collection_name = getattr(vector_store, "collection_name", None)
+            if client and collection_name:
+                all_docs = []
+                offset = None
+                while True:
+                    # Scroll 100 points at a time
+                    records, offset = client.scroll(
+                        collection_name=collection_name,
+                        with_payload=True,
+                        with_vectors=False,
+                        limit=100,
+                        offset=offset
+                    )
+                    for r in records:
+                        payload = r.payload
+                        if payload:
+                            content = payload.get("page_content", "")
+                            meta = payload.get("metadata", {})
+                            all_docs.append(Document(page_content=content, metadata=meta))
+                    if offset is None:
+                        break
+
                 if all_docs:
                     from langchain_community.retrievers import BM25Retriever
                     self._bm25 = BM25Retriever.from_documents(all_docs)
         except Exception as e:
             import logging
-            logging.getLogger(__name__).warning("Failed to initialize BM25Retriever for Hybrid Search: %s", e)
+            logging.getLogger(__name__).warning("Failed to initialize BM25Retriever for Hybrid Search from Qdrant: %s", e)
 
     # ------------------------------------------------------------------
     # Public API
