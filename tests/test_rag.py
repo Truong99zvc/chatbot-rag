@@ -68,6 +68,7 @@ class TestRetriever:
     def test_search_by_article_filters_by_number(self):
         """search_by_article should return docs containing the article number."""
         mock_store = MagicMock()
+        mock_store.client.scroll.return_value = ([], None)
         mock_store.similarity_search.return_value = [
             Document(page_content="Điều 15. Nội dung điều 15", metadata={"source": "x.pdf", "page": 1}),
             Document(page_content="Điều 20. Nội dung khác", metadata={"source": "x.pdf", "page": 2}),

@@ -130,12 +130,12 @@ def test_agent_routing_rag_success():
 def test_hybrid_search_deduplication():
     # Setup mock store and mock docstore dict
     mock_store = MagicMock()
+    mock_store.client.scroll.return_value = ([], None)
     doc1 = Document(page_content="Văn bản A", metadata={"source": "file.pdf", "page": 1})
     doc2 = Document(page_content="Văn bản B", metadata={"source": "file.pdf", "page": 2})
 
     # Return doc1 & doc2 on vector search
     mock_store.similarity_search.return_value = [doc1, doc2]
-    mock_store.docstore._dict = {"1": doc1, "2": doc2}
 
     # Create retriever
     retriever = Retriever(mock_store)
