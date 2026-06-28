@@ -24,9 +24,14 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from unittest.mock import MagicMock
+# Patch pyarrow.dataset to prevent Python 3.14 Windows Access Violation crash from sentence_transformers
+sys.modules['pyarrow.dataset'] = MagicMock()
+
 from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / ".env")
 
+from langchain_core.documents import Document
 from app.config.settings import settings
 from app.embeddings.embedder import get_embeddings
 from app.ingestion.chunker import chunk_documents
@@ -69,37 +74,69 @@ def build_index(reset: bool = False) -> None:
     # Process each PDF
     total_chunks = 0
     start = time.perf_counter()
+    import json
+
+    cache_path = Path("vectorstores/chunks_cache.json")
 
     for pdf_path in pdf_files:
         logger.info("=" * 60)
         logger.info("Processing: %s", pdf_path.name)
-        logger.info("Step 1/3 — Parsing PDF with Docling (OCR enabled)...")
 
-        t0 = time.perf_counter()
-        try:
-            documents = load_file_from_path(pdf_path)
-        except Exception as exc:
-            logger.error("Failed to parse '%s': %s", pdf_path.name, exc)
-            continue
+        chunks = []
+        if cache_path.exists():
+            logger.info("Found cached chunks at %s. Loading from cache to skip PDF parsing...", cache_path)
+            try:
+                with open(cache_path, "r", encoding="utf-8") as f:
+                    cached_data = json.load(f)
+                chunks = [
+                    Document(page_content=item["page_content"], metadata=item["metadata"])
+                    for item in cached_data
+                ]
+                logger.info("  → Loaded %d chunks from cache", len(chunks))
+            except Exception as e:
+                logger.warning("Failed to load chunks from cache: %s. Re-parsing...", e)
+                chunks = []
 
-        logger.info(
-            "  → Extracted %d pages in %.1fs",
-            len(documents),
-            time.perf_counter() - t0,
-        )
+        if not chunks:
+            logger.info("Step 1/3 — Parsing PDF with Docling (OCR enabled)...")
+            t0 = time.perf_counter()
+            try:
+                documents = load_file_from_path(pdf_path)
+            except Exception as exc:
+                logger.error("Failed to parse '%s': %s", pdf_path.name, exc)
+                continue
 
-        if not documents:
-            logger.warning("  → No text extracted from '%s', skipping.", pdf_path.name)
-            continue
+            logger.info(
+                "  → Extracted %d pages in %.1fs",
+                len(documents),
+                time.perf_counter() - t0,
+            )
 
-        logger.info("Step 2/3 — Chunking documents...")
-        t1 = time.perf_counter()
-        chunks = chunk_documents(documents)
-        logger.info(
-            "  → Created %d chunks in %.1fs",
-            len(chunks),
-            time.perf_counter() - t1,
-        )
+            if not documents:
+                logger.warning("  → No text extracted from '%s', skipping.", pdf_path.name)
+                continue
+
+            logger.info("Step 2/3 — Chunking documents...")
+            t1 = time.perf_counter()
+            chunks = chunk_documents(documents)
+            logger.info(
+                "  → Created %d chunks in %.1fs",
+                len(chunks),
+                time.perf_counter() - t1,
+            )
+
+            if chunks:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    cached_data = [
+                        {"page_content": doc.page_content, "metadata": doc.metadata}
+                        for doc in chunks
+                    ]
+                    with open(cache_path, "w", encoding="utf-8") as f:
+                        json.dump(cached_data, f, ensure_ascii=False, indent=2)
+                    logger.info("  → Chunks saved to cache file: %s", cache_path)
+                except Exception as e:
+                    logger.warning("Failed to save chunks to cache: %s", e)
 
         if not chunks:
             logger.warning("  → No chunks produced, skipping.")

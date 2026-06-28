@@ -70,8 +70,7 @@ coverage.xml
 data/
 models/
 embeddings/
-vectorstores/faiss/current_index/
-vectorstores/sessions.json
+vectorstores/
 *.faiss
 *.pkl
 *.pickle

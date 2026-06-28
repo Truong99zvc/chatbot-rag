@@ -6,6 +6,11 @@ Uses MarkdownTextSplitter as primary strategy so chunk boundaries
 follow heading hierarchy (Chương → Điều → Khoản).
 Falls back to RecursiveCharacterTextSplitter for non-Markdown content.
 """
+import sys
+from unittest.mock import MagicMock
+# Patch pyarrow.dataset to prevent Python 3.14 Windows Access Violation crash from sentence_transformers
+sys.modules['pyarrow.dataset'] = MagicMock()
+
 from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownTextSplitter, RecursiveCharacterTextSplitter
 

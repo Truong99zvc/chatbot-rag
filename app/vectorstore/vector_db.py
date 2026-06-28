@@ -45,22 +45,26 @@ class VectorDB:
         # Check if collection exists, if not create it
         try:
             if not client.collection_exists(self._collection_name):
-                # Multilingual-e5-large uses 1024 dimensions
-                # We can dynamically retrieve the embedding dimension or default to 1024
-                # In Qdrant, we can let LangChain's QdrantVectorStore handle creation 
-                # or create it manually to specify vectors configuration
-                logger.info("Collection '%s' does not exist. Creating it...", self._collection_name)
-                # We let from_documents handle creation by passing client & collection_name
+                # Dynamically retrieve embedding dimension
+                dummy_vector = self._embeddings.embed_query("dummy")
+                dimension = len(dummy_vector)
+                logger.info("Creating Qdrant collection '%s' with dimension %d...", self._collection_name, dimension)
+                client.create_collection(
+                    collection_name=self._collection_name,
+                    vectors_config=qmodels.VectorParams(
+                        size=dimension,
+                        distance=qmodels.Distance.COSINE
+                    )
+                )
         except Exception as e:
-            logger.warning("Error checking collection existence: %s. Proceeding with insertion...", e)
+            logger.warning("Error checking or creating Qdrant collection: %s. Proceeding with insertion...", e)
             
-        QdrantVectorStore.from_documents(
-            documents,
-            embedding=self._embeddings,
-            url=self._url if self._url else None,
-            path=str(self._local_path) if not self._url else None,
+        store = QdrantVectorStore(
+            client=client,
             collection_name=self._collection_name,
+            embedding=self._embeddings,
         )
+        store.add_documents(documents)
         logger.info("Successfully added %d documents to Qdrant collection '%s'.", len(documents), self._collection_name)
 
     def load(self) -> QdrantVectorStore:
