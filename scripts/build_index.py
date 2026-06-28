@@ -62,8 +62,8 @@ def build_index(reset: bool = False) -> None:
     embeddings = get_embeddings()
     db = VectorDB(embeddings)
 
-    if reset and settings.FAISS_INDEX_DIR.exists():
-        logger.info("--reset flag: deleting existing FAISS index...")
+    if reset:
+        logger.info("--reset flag: deleting existing Qdrant collection...")
         db.reset()
 
     # Process each PDF
@@ -105,7 +105,7 @@ def build_index(reset: bool = False) -> None:
             logger.warning("  → No chunks produced, skipping.")
             continue
 
-        logger.info("Step 3/3 — Embedding & saving to FAISS...")
+        logger.info("Step 3/3 — Embedding & saving to Qdrant...")
         t2 = time.perf_counter()
         try:
             db.add_documents(chunks)
@@ -126,7 +126,7 @@ def build_index(reset: bool = False) -> None:
     logger.info("✅ Build complete!")
     logger.info("   Total chunks indexed : %d", total_chunks)
     logger.info("   Total time           : %.1fs", elapsed)
-    logger.info("   Index location       : %s", settings.FAISS_INDEX_DIR)
+    logger.info("   Collection name      : %s", settings.QDRANT_COLLECTION)
     logger.info("")
     logger.info("You can now start the API with: make dev")
 

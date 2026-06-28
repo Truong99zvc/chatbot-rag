@@ -27,14 +27,23 @@ async def lifespan(app: FastAPI):
     # Initialize SQL database tables
     init_db()
 
-    # Startup: validate that the FAISS index exists
-    if not settings.FAISS_INDEX_DIR.exists():
-        import logging
-        logging.getLogger(__name__).warning(
-            "FAISS index not found at '%s'. "
-            "Run `make build-index` before sending queries.",
-            settings.FAISS_INDEX_DIR,
-        )
+    # Startup: validate Qdrant connection or local path
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        from qdrant_client import QdrantClient
+        if settings.QDRANT_URL:
+            client = QdrantClient(url=settings.QDRANT_URL)
+            client.collection_exists(settings.QDRANT_COLLECTION)
+        else:
+            if not settings.QDRANT_PATH.exists():
+                logger.warning(
+                    "Qdrant local storage not found at '%s'. "
+                    "Run `make build-index` before sending queries.",
+                    settings.QDRANT_PATH,
+                )
+    except Exception as e:
+        logger.warning("Could not validate Qdrant connection/storage on startup: %s", e)
     yield
     # Shutdown: nothing to clean up (FAISS is disk-backed)
 
