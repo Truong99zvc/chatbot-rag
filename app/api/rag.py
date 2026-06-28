@@ -9,12 +9,9 @@ Endpoints:
 """
 from __future__ import annotations
 
-import json
-
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, field_validator
 
-from app.config.settings import settings
 from app.rag.pipeline import RAGPipeline, get_session_history, clear_session_history
 
 router = APIRouter()

@@ -1,8 +1,7 @@
 """
 Tests for RAG components of the UIT Quy Chế Đào Tạo Chatbot.
 """
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from langchain_core.documents import Document
 
 from app.rag.retriever import Retriever

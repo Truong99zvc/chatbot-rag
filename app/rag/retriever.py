@@ -20,7 +20,7 @@ class Retriever:
 
     def __init__(self, vector_store: FAISS) -> None:
         self._store = vector_store
-        
+
         # Initialize BM25 retriever from FAISS docstore for Hybrid Search
         self._bm25 = None
         try:
@@ -41,10 +41,10 @@ class Retriever:
     def retrieve(self, query: str, k: int | None = None) -> list[Document]:
         """Return the top-k most relevant chunks using Hybrid Search (FAISS + BM25)."""
         k = k or settings.TOP_K_RESULTS
-        
+
         # 1. Semantic search via FAISS
         vector_results = self._store.similarity_search(query, k=k * 2)
-        
+
         # 2. Keyword search via BM25
         bm25_results = []
         if self._bm25:
@@ -54,11 +54,11 @@ class Retriever:
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning("BM25 retrieval failed: %s", e)
-                
+
         # 3. Interleave and deduplicate results
         seen: set[tuple] = set()
         combined: list[Document] = []
-        
+
         for i in range(max(len(vector_results), len(bm25_results))):
             if i < len(vector_results):
                 doc = vector_results[i]
@@ -73,7 +73,7 @@ class Retriever:
                 if doc_id not in seen:
                     seen.add(doc_id)
                     combined.append(doc)
-                    
+
         return combined[:k]
 
     def search_by_article(self, article_number: str | int, k: int = 6) -> list[Document]:

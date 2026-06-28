@@ -31,7 +31,7 @@ def parse_json_from_text(text: str) -> Dict[str, Any]:
     cleaned = re.sub(r"^```json\s*", "", cleaned, flags=re.MULTILINE)
     cleaned = re.sub(r"^```\s*", "", cleaned, flags=re.MULTILINE)
     cleaned = re.sub(r"```$", "", cleaned, flags=re.MULTILINE).strip()
-    
+
     # Try to grab the JSON object substring
     match = re.search(r"\{.*\}", cleaned, re.DOTALL)
     if match:
@@ -67,7 +67,7 @@ class UITAcademicAgent:
     def __init__(self, retriever: Retriever, generator: Generator) -> None:
         self.retriever = retriever
         self.generator = generator
-        
+
         # Build prompt templates
         self.router_prompt = build_router_prompt()
         self.query_rewriter_prompt = build_query_rewriter_prompt()
@@ -75,7 +75,7 @@ class UITAcademicAgent:
         self.hallucination_grader_prompt = build_hallucination_grader_prompt()
         self.answer_grader_prompt = build_answer_grader_prompt()
         self.rag_prompt = build_rag_prompt()
-        
+
         # Construct state graph
         self.workflow = self._create_workflow()
 
@@ -97,11 +97,11 @@ class UITAcademicAgent:
             is_useful="",
             loop_count=0,
         )
-        
+
         app = self.workflow.compile()
         # Enable Langfuse tracing via configuration if callback is passed
         config = {}
-        
+
         # Execute Graph
         final_state = app.invoke(initial_state, config)
         return {
@@ -119,7 +119,7 @@ class UITAcademicAgent:
         logger.info("--- NODE: ROUTE QUESTION ---")
         question = state["question"]
         memory_context = state["memory_context"]
-        
+
         # Invoke Router LLM
         response = self.generator.generate(
             self.router_prompt,
@@ -130,7 +130,7 @@ class UITAcademicAgent:
         choice = parsed.get("choice", "rag").lower()
         if choice not in ["chat", "article", "rag"]:
             choice = "rag"
-            
+
         logger.info("   -> Routed to: %s", choice)
         return {"route": choice}
 
@@ -139,7 +139,7 @@ class UITAcademicAgent:
         logger.info("--- NODE: CHAT DIRECT ---")
         question = state["question"]
         memory_context = state["memory_context"]
-        
+
         # Fast direct answer template
         chat_prompt = ChatPromptTemplate.from_template(
             "Bạn là trợ lý tư vấn học vụ UIT thân thiện. Hãy trả lời câu hỏi xã giao này một cách ngắn gọn, tự nhiên:\n"
@@ -158,7 +158,7 @@ class UITAcademicAgent:
         logger.info("--- NODE: REWRITE QUERY ---")
         question = state["question"]
         memory_context = state["memory_context"]
-        
+
         response = self.generator.generate(
             self.query_rewriter_prompt,
             question=question,
@@ -181,19 +181,19 @@ class UITAcademicAgent:
         """Retrieve direct content for a specific article."""
         logger.info("--- NODE: RETRIEVE ARTICLE ---")
         question = state["question"]
-        
+
         # Try to parse the article number (e.g. "Điều 15" -> "15")
         match = re.search(r"Điều\s+(\d+)", question, re.IGNORECASE)
         if not match:
             # Fallback regex for pure numbers
             match = re.search(r"\b(\d+)\b", question)
-            
+
         article_number = match.group(1) if match else "1"
         docs = self.retriever.search_by_article(article_number)
-        
+
         content = self.retriever.format_article_results(docs, article_number)
         sources = self.retriever.format_sources(docs) if docs else ""
-        
+
         return {"generation": content, "sources": sources}
 
     def grade_documents(self, state: AgentState) -> Dict[str, Any]:
@@ -201,10 +201,10 @@ class UITAcademicAgent:
         logger.info("--- NODE: GRADE DOCUMENTS ---")
         question = state["rewritten_question"]
         documents = state["documents"]
-        
+
         filtered_docs = []
         is_relevant = "no"
-        
+
         for doc in documents:
             response = self.generator.generate(
                 self.doc_grader_prompt,
@@ -216,7 +216,7 @@ class UITAcademicAgent:
             if grade == "yes":
                 filtered_docs.append(doc)
                 is_relevant = "yes"
-                
+
         logger.info("   -> Grading result: %s (%d/%d relevant chunks)", is_relevant, len(filtered_docs), len(documents))
         return {"documents": filtered_docs, "is_relevant": is_relevant}
 
@@ -226,17 +226,17 @@ class UITAcademicAgent:
         question = state["question"]
         memory_context = state["memory_context"]
         documents = state["documents"]
-        
+
         if not documents:
             fallback = (
                 "Tôi không tìm thấy thông tin liên quan trong Quy chế Đào tạo UIT. "
                 "Bạn vui lòng liên hệ Phòng Đào tạo – phòng A101 hoặc email daotao@uit.edu.vn để được hỗ trợ."
             )
             return {"generation": fallback, "sources": ""}
-            
+
         context = self.retriever.format_context(documents)
         sources = self.retriever.format_sources(documents)
-        
+
         response = self.generator.generate(
             self.rag_prompt,
             context=context,
@@ -250,10 +250,10 @@ class UITAcademicAgent:
         logger.info("--- NODE: GRADE HALLUCINATION ---")
         documents = state["documents"]
         generation = state["generation"]
-        
+
         if not documents:
             return {"is_grounded": "yes"}
-            
+
         context = self.retriever.format_context(documents)
         response = self.generator.generate(
             self.hallucination_grader_prompt,
@@ -270,7 +270,7 @@ class UITAcademicAgent:
         logger.info("--- NODE: GRADE ANSWER ---")
         question = state["question"]
         generation = state["generation"]
-        
+
         response = self.generator.generate(
             self.answer_grader_prompt,
             question=question,
@@ -288,7 +288,7 @@ class UITAcademicAgent:
     def _create_workflow(self) -> StateGraph:
         """Define state graph structure, nodes, edges, and transitions."""
         workflow = StateGraph(AgentState)
-        
+
         # Add Nodes
         workflow.add_node("route_question", self.route_question)
         workflow.add_node("chat_direct", self.chat_direct)
@@ -299,10 +299,10 @@ class UITAcademicAgent:
         workflow.add_node("generate_answer", self.generate_answer)
         workflow.add_node("grade_hallucination", self.grade_hallucination)
         workflow.add_node("grade_answer", self.grade_answer)
-        
+
         # Set Entry Point
         workflow.set_entry_point("route_question")
-        
+
         # Define Conditional Router Edge
         workflow.add_conditional_edges(
             "route_question",
@@ -313,15 +313,15 @@ class UITAcademicAgent:
                 "rag": "rewrite_query",
             }
         )
-        
+
         # Terminal Edges
         workflow.add_edge("chat_direct", END)
         workflow.add_edge("retrieve_article", END)
-        
+
         # Main Flow Edges
         workflow.add_edge("rewrite_query", "retrieve_docs")
         workflow.add_edge("retrieve_docs", "grade_documents")
-        
+
         # Grader Decisions
         workflow.add_conditional_edges(
             "grade_documents",
@@ -332,7 +332,7 @@ class UITAcademicAgent:
                 "stop_fallback": "generate_answer",
             }
         )
-        
+
         workflow.add_conditional_edges(
             "generate_answer",
             lambda state: "grade" if state["documents"] else "stop",
@@ -341,7 +341,7 @@ class UITAcademicAgent:
                 "stop": END,
             }
         )
-        
+
         workflow.add_conditional_edges(
             "grade_hallucination",
             self._decide_after_hallucination_grading,
@@ -351,7 +351,7 @@ class UITAcademicAgent:
                 "stop": END,
             }
         )
-        
+
         workflow.add_conditional_edges(
             "grade_answer",
             self._decide_after_answer_grading,
@@ -361,7 +361,7 @@ class UITAcademicAgent:
                 "stop": END,
             }
         )
-        
+
         return workflow
 
     # ------------------------------------------------------------------
@@ -372,13 +372,13 @@ class UITAcademicAgent:
         """Decide what to do after checking documents relevance."""
         if state["is_relevant"] == "yes":
             return "generate"
-            
+
         loop_count = state.get("loop_count", 0)
         if loop_count < 1:
             logger.info("   -> [Doc Grader] No relevant docs found. Retrying query rewrite...")
             state["loop_count"] = loop_count + 1
             return "retry_rewrite"
-            
+
         logger.info("   -> [Doc Grader] No relevant docs found and max retry reached. Proceeding to fallback answer.")
         return "stop_fallback"
 
@@ -386,13 +386,13 @@ class UITAcademicAgent:
         """Decide what to do after checking hallucination."""
         if state["is_grounded"] == "yes":
             return "useful_test"
-            
+
         loop_count = state.get("loop_count", 0)
         if loop_count < 2:
             logger.info("   -> [Hallucination Grader] Response not grounded! Regenerating... (Retry count: %d)", loop_count + 1)
             state["loop_count"] = loop_count + 1
             return "regenerate"
-            
+
         logger.info("   -> [Hallucination Grader] Max retries reached. Stopping.")
         return "stop"
 
@@ -400,12 +400,12 @@ class UITAcademicAgent:
         """Decide what to do after checking if answer is useful."""
         if state["is_useful"] == "yes":
             return "useful"
-            
+
         loop_count = state.get("loop_count", 0)
         if loop_count < 2:
             logger.info("   -> [Answer Grader] Answer not useful. Retrying search flow... (Retry count: %d)", loop_count + 1)
             state["loop_count"] = loop_count + 1
             return "retry_search"
-            
+
         logger.info("   -> [Answer Grader] Max retries reached. Stopping.")
         return "stop"

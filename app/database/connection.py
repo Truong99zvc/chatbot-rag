@@ -36,7 +36,7 @@ def init_db() -> None:
             from pathlib import Path
             db_path = Path(settings.DATABASE_URL.replace("sqlite:///", ""))
             db_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
         Base.metadata.create_all(bind=engine)
         logger.info("Database initialized successfully.")
     except Exception as e:

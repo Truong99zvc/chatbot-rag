@@ -9,9 +9,8 @@ Orchestrates the full Retrieve-Augment-Generate flow using LangGraph Agent:
 from __future__ import annotations
 
 import logging
-from typing import Dict, List
+from typing import List
 
-from app.config.settings import settings
 from app.database.connection import SessionLocal
 from app.database.models import ChatSession, ChatTurn
 from app.embeddings.embedder import get_embeddings
@@ -54,7 +53,7 @@ def append_to_session(session_id: str, question: str, answer: str, sources: str 
             db.add(session)
             db.commit()
             db.refresh(session)
-            
+
         turn = ChatTurn(
             session_id=session_id,
             question=question,
@@ -124,13 +123,13 @@ class RAGPipeline:
 
         # Run the LangGraph Agent
         result = self._agent.run(question, history=history)
-        
+
         answer = result["answer"]
         sources = result["sources"]
 
         # Persist Q&A turn to SQL DB
         append_to_session(session_id, question, answer, sources)
-        
+
         return {"answer": answer, "sources": sources, "session_id": session_id}
 
     def search_article(self, article_number: str | int) -> dict:

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Session history (JSON file on disk, per session_id)
     SESSION_STORE_FILE: Path = Path("vectorstores/sessions.json")
-    
+
     # DB & Cache
     DATABASE_URL: str = "sqlite:///vectorstores/sessions.db"
     REDIS_URL: str = ""
