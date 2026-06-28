@@ -27,6 +27,8 @@ dependencies = [
     # Vector DB
     "faiss-cpu>=1.10.0",
     "rank-bm25>=0.2.2",
+    "qdrant-client>=1.18.0",
+    "langchain-qdrant>=1.1.0",
     
     # Document Parsing (PDF, OCR)
     "docling>=2.0.0",
