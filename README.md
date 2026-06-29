@@ -40,7 +40,7 @@ Students can ask questions using free-form natural language and receive highly a
 | **Database & Cache** | **SQLAlchemy** (supports SQLite/PostgreSQL) + optional **Redis** |
 | **Observability** | **Langfuse** (LLM Tracing & Monitoring) |
 | **CI/CD** | **GitHub Actions** (Ruff Lint & Pytest) |
-| **Web UI** | High-quality dark-themed HTML/CSS/JS frontend served directly from the root `/` |
+| **Web UI** | Modern React + Vite + TypeScript dark-themed application compiled and served from `/` |
 
 ---
 
