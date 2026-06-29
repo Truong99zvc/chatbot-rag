@@ -99,8 +99,20 @@ class UITAcademicAgent:
         )
 
         app = self.workflow.compile()
-        # Enable Langfuse tracing via configuration if callback is passed
         config = {}
+        # Enable Langfuse tracing if credentials are provided
+        if settings.LANGFUSE_PUBLIC_KEY and settings.LANGFUSE_SECRET_KEY:
+            try:
+                from langfuse.callback import CallbackHandler
+                handler = CallbackHandler(
+                    public_key=settings.LANGFUSE_PUBLIC_KEY,
+                    secret_key=settings.LANGFUSE_SECRET_KEY,
+                    host=settings.LANGFUSE_HOST,
+                )
+                config["callbacks"] = [handler]
+                logger.info("Langfuse Tracing callback enabled.")
+            except Exception as e:
+                logger.warning("Failed to initialize Langfuse callback: %s", e)
 
         # Execute Graph
         final_state = app.invoke(initial_state, config)
