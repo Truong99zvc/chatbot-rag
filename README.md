@@ -116,6 +116,21 @@ make dev
 Open **http://localhost:8000** in your browser to load the Web Chat interface.
 API Documentation (Swagger UI) is available at: **http://localhost:8000/docs**
 
+### 5. Frontend Development (React + Vite)
+If you wish to modify or run the React frontend in active development mode:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open **http://localhost:5173** in your browser. All requests to the backend (`/api` and `/health`) are automatically proxied to the backend running at `localhost:8000`.
+
+To compile the React project for production:
+```bash
+npm run build
+```
+This command compiles and moves the assets directly into the FastAPI backend's `static/` directory so the server can serve it as a single-process application.
+
 ---
 
 ## 📡 API Endpoints
