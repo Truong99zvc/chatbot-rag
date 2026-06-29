@@ -49,7 +49,7 @@ async def test_rag_query_whitespace_only():
 @pytest.mark.asyncio
 async def test_rag_query_no_index_returns_503():
     """When FAISS index is missing, should return 503."""
-    with patch("app.api.rag.RAGPipeline", side_effect=RuntimeError("Index not found")):
+    with patch("app.api.rag.get_pipeline", side_effect=RuntimeError("Index not found")):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/rag/query",
@@ -66,7 +66,7 @@ async def test_rag_query_success():
         "answer": "Sinh viên cần tích lũy đủ 130 tín chỉ.",
         "sources": "- **quy_che_uit.pdf**, trang 15",
     })
-    with patch("app.api.rag.RAGPipeline", return_value=mock_pipeline):
+    with patch("app.api.rag.get_pipeline", return_value=mock_pipeline):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/rag/query",
@@ -92,7 +92,7 @@ async def test_search_article_success():
         "content": "## Nội dung Điều 15\n...",
         "sources": "- **quy_che_uit.pdf**, trang 15",
     }
-    with patch("app.api.rag.RAGPipeline", return_value=mock_pipeline):
+    with patch("app.api.rag.get_pipeline", return_value=mock_pipeline):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/rag/search?article=15")
     assert response.status_code == 200

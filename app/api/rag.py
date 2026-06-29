@@ -16,6 +16,16 @@ from app.rag.pipeline import RAGPipeline, get_session_history, clear_session_his
 
 router = APIRouter()
 
+_pipeline_instance = None
+
+
+def get_pipeline() -> RAGPipeline:
+    """Lazy-load and reuse the RAGPipeline singleton to avoid Qdrant local file locking."""
+    global _pipeline_instance
+    if _pipeline_instance is None:
+        _pipeline_instance = RAGPipeline()
+    return _pipeline_instance
+
 
 # ---------------------------------------------------------------------------
 # Request / Response schemas
@@ -75,7 +85,7 @@ async def query(request: QueryRequest) -> QueryResponse:
     - Thang điểm chữ của UIT được quy định như thế nào?
     """
     try:
-        pipeline = RAGPipeline()
+        pipeline = get_pipeline()
     except RuntimeError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -104,7 +114,7 @@ async def search_by_article(
     **Ví dụ:** `/api/v1/rag/search?article=15` → trả về nội dung Điều 15.
     """
     try:
-        pipeline = RAGPipeline()
+        pipeline = get_pipeline()
     except RuntimeError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
